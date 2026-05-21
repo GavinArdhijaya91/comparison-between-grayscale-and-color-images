@@ -28,6 +28,7 @@ Proyek ini dibangun untuk mendemonstrasikan secara visual dan matematis bagaiman
    $$Y = 0.299R + 0.587G + 0.114B$$
 4. **Klasifikasi**: Apabila jarak antara vektor warna sangat kecil (kondisi $R \approx G \approx B$), maka gambar akan diklasifikasikan sebagai *Grayscale*. Jika terdapat perbedaan signifikan (misalnya $R \neq G \neq B$), gambar akan diklasifikasikan sebagai *Colored Image*.
 5. **Visualisasi Histogram**: Chart.js (di versi Flask) / Matplotlib (di versi Streamlit) akan membaca distribusi frekuensi intensitas warna (0-255) pada gambar dan membuat plot grafik garis.
+6. **Advanced Linear Algebra (SVD & PCA)**: Menggunakan dekomposisi nilai singular (*Singular Value Decomposition*) untuk menghitung *cumulative variance* serta kompresi citra secara interaktif, dan *Principal Component Analysis* (Matriks Kovarians & Eigenvectors) untuk mencari arah/vektor warna paling dominan dalam ruang 3D RGB.
 
 ---
 
