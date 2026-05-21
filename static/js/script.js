@@ -5,14 +5,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const previewImg = document.getElementById('preview-img');
     const statType = document.getElementById('stat-type');
-    const statSimilarity = document.getElementById('stat-similarity');
+    const statMeanSat = document.getElementById('stat-mean-sat');
+    const statColoredRatio = document.getElementById('stat-colored-ratio');
+    const statReason = document.getElementById('stat-reason');
     const statResolution = document.getElementById('stat-resolution');
     const statPixels = document.getElementById('stat-pixels');
     const errorToast = document.getElementById('error-toast');
     const errorMessage = document.getElementById('error-message');
     
+    // Channel Image Elements
+    const channelR = document.getElementById('channel-r');
+    const channelG = document.getElementById('channel-g');
+    const channelB = document.getElementById('channel-b');
+    
+    // Matrix Elements
+    const matrixTabs = document.querySelectorAll('.matrix-tab');
+    const matrixTable = document.getElementById('matrix-table');
+    
     let rgbChart = null;
-
+    let currentMatrixData = null;
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
@@ -94,9 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
         dropZone.style.display = 'block';
         resultsContainer.style.display = 'block';
 
-
+        // 1. Identifikasi
         previewImg.src = data.image_url;
         statType.textContent = data.type;
+        statReason.textContent = data.reason;
         
         if (data.type === 'Grayscale Image') {
             statType.style.color = '#a0a0b0';
@@ -106,12 +118,76 @@ document.addEventListener('DOMContentLoaded', () => {
             statType.style.textShadow = '0 0 10px rgba(0, 240, 255, 0.3)';
         }
 
-        statSimilarity.textContent = `${data.similarity}%`;
+        statMeanSat.textContent = data.hsv_metrics.mean_saturation;
+        statColoredRatio.textContent = `${data.hsv_metrics.colored_ratio}%`;
         statResolution.textContent = data.resolution;
         statPixels.textContent = data.total_pixels.toLocaleString();
 
+        // 2. Channel RGB & Stats
+        channelR.src = data.channels.r;
+        channelG.src = data.channels.g;
+        channelB.src = data.channels.b;
+        
+        const statsBody = document.getElementById('channel-stats-body');
+        statsBody.innerHTML = `
+            <tr>
+                <td style="color: #ff4d4d; font-weight: bold;">Red</td>
+                <td>${data.stats.r.min}</td><td>${data.stats.r.max}</td><td>${data.stats.r.mean}</td><td>${data.stats.r.std}</td>
+            </tr>
+            <tr>
+                <td style="color: #4dff4d; font-weight: bold;">Green</td>
+                <td>${data.stats.g.min}</td><td>${data.stats.g.max}</td><td>${data.stats.g.mean}</td><td>${data.stats.g.std}</td>
+            </tr>
+            <tr>
+                <td style="color: #4d4dff; font-weight: bold;">Blue</td>
+                <td>${data.stats.b.min}</td><td>${data.stats.b.max}</td><td>${data.stats.b.mean}</td><td>${data.stats.b.std}</td>
+            </tr>
+        `;
 
+        // 3. Matrix Representation
+        currentMatrixData = data.matrix;
+        renderMatrix('r'); // Default to red
+        
+        // 4. Histogram Chart
         renderChart(data.histogram);
+    }
+    
+    // Matrix Tabs Event Listeners
+    matrixTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            matrixTabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            renderMatrix(e.target.dataset.channel);
+        });
+    });
+    
+    function renderMatrix(channel) {
+        if (!currentMatrixData) return;
+        
+        const matrix = currentMatrixData[channel];
+        matrixTable.innerHTML = '';
+        
+        // Determine base color based on channel
+        let rgbBase = '';
+        if (channel === 'r') rgbBase = '255, 0, 0';
+        else if (channel === 'g') rgbBase = '0, 255, 0';
+        else if (channel === 'b') rgbBase = '0, 0, 255';
+        
+        matrix.forEach(row => {
+            const tr = document.createElement('tr');
+            row.forEach(val => {
+                const td = document.createElement('td');
+                td.textContent = val;
+                
+                // Opacity based on value (0-255) to create heatmap effect
+                // Minimum opacity 0.1 so text is always slightly visible
+                const opacity = Math.max(0.1, val / 255);
+                td.style.backgroundColor = `rgba(${rgbBase}, ${opacity})`;
+                
+                tr.appendChild(td);
+            });
+            matrixTable.appendChild(tr);
+        });
     }
 
     function renderChart(histData) {

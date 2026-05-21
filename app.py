@@ -41,43 +41,97 @@ def analyze_image():
                 return jsonify({'error': 'Invalid or corrupted image file'}), 400
                 
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+            img_hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
             
             h, w, c = img_rgb.shape
             total_pixels = h * w
             
-            std_dev = np.std(img_rgb, axis=2)
-            mean_std_dev = np.mean(std_dev)
+            # HSV Analysis
+            s_channel = img_hsv[:, :, 1]
+            mean_saturation = float(np.mean(s_channel))
+            colored_pixel_ratio = float(np.sum(s_channel > 15) / total_pixels * 100)
             
-            max_possible_std_dev = np.std([255, 0, 0])
-            similarity = max(0, 100 - (mean_std_dev / max_possible_std_dev * 100))
-            
-            threshold = 95.0
-            if similarity >= threshold:
+            if mean_saturation < 8 or colored_pixel_ratio < 1.0:
                 img_type = "Grayscale Image"
+                reason = f"Mean Saturation ({mean_saturation:.2f}) < 8 or Colored Ratio ({colored_pixel_ratio:.2f}%) < 1%"
             else:
                 img_type = "Colored Image"
+                reason = f"Mean Saturation ({mean_saturation:.2f}) >= 8 and Colored Ratio ({colored_pixel_ratio:.2f}%) >= 1%"
                 
-            hist_r = cv2.calcHist([img_rgb], [0], None, [256], [0, 256]).flatten().tolist()
-            hist_g = cv2.calcHist([img_rgb], [1], None, [256], [0, 256]).flatten().tolist()
-            hist_b = cv2.calcHist([img_rgb], [2], None, [256], [0, 256]).flatten().tolist()
-            
+            # Base64 Encoding for Main Image
             import base64
             encoded_img = base64.b64encode(in_memory_file).decode('utf-8')
             mime_type = file.mimetype if file.mimetype else 'image/jpeg'
             image_url = f"data:{mime_type};base64,{encoded_img}"
             
+            # Separate Channels (Visualizations)
+            r_img_bgr = np.zeros_like(img_bgr)
+            r_img_bgr[:,:,2] = img_rgb[:,:,0] # Assign R to BGR's Red
+            _, buffer_r = cv2.imencode('.jpg', r_img_bgr)
+            url_r = f"data:image/jpeg;base64,{base64.b64encode(buffer_r).decode('utf-8')}"
+            
+            g_img_bgr = np.zeros_like(img_bgr)
+            g_img_bgr[:,:,1] = img_rgb[:,:,1]
+            _, buffer_g = cv2.imencode('.jpg', g_img_bgr)
+            url_g = f"data:image/jpeg;base64,{base64.b64encode(buffer_g).decode('utf-8')}"
+            
+            b_img_bgr = np.zeros_like(img_bgr)
+            b_img_bgr[:,:,0] = img_rgb[:,:,2] # Assign B to BGR's Blue
+            _, buffer_b = cv2.imencode('.jpg', b_img_bgr)
+            url_b = f"data:image/jpeg;base64,{base64.b64encode(buffer_b).decode('utf-8')}"
+            
+            # Channel Statistics
+            def get_stats(channel_data):
+                return {
+                    'min': int(np.min(channel_data)),
+                    'max': int(np.max(channel_data)),
+                    'mean': round(float(np.mean(channel_data)), 2),
+                    'std': round(float(np.std(channel_data)), 2)
+                }
+            
+            stats = {
+                'r': get_stats(img_rgb[:,:,0]),
+                'g': get_stats(img_rgb[:,:,1]),
+                'b': get_stats(img_rgb[:,:,2])
+            }
+            
+            # Matrix Table Subset (Max 16x16)
+            mat_h = min(16, h)
+            mat_w = min(16, w)
+            matrix_data = {
+                'r': img_rgb[0:mat_h, 0:mat_w, 0].tolist(),
+                'g': img_rgb[0:mat_h, 0:mat_w, 1].tolist(),
+                'b': img_rgb[0:mat_h, 0:mat_w, 2].tolist()
+            }
+            
+            # Histograms (Still useful for chart)
+            hist_r = cv2.calcHist([img_rgb], [0], None, [256], [0, 256]).flatten().tolist()
+            hist_g = cv2.calcHist([img_rgb], [1], None, [256], [0, 256]).flatten().tolist()
+            hist_b = cv2.calcHist([img_rgb], [2], None, [256], [0, 256]).flatten().tolist()
+            
             return jsonify({
                 'success': True,
                 'image_url': image_url,
                 'type': img_type,
-                'similarity': round(similarity, 2),
+                'reason': reason,
+                'hsv_metrics': {
+                    'mean_saturation': round(mean_saturation, 2),
+                    'colored_ratio': round(colored_pixel_ratio, 2)
+                },
                 'resolution': f"{w}x{h}",
                 'total_pixels': total_pixels,
                 'histogram': {
                     'r': hist_r,
                     'g': hist_g,
                     'b': hist_b
-                }
+                },
+                'channels': {
+                    'r': url_r,
+                    'g': url_g,
+                    'b': url_b
+                },
+                'stats': stats,
+                'matrix': matrix_data
             })
             
         except Exception as e:

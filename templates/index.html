@@ -20,8 +20,12 @@
         <main>
 
             <section class="glass-card upload-section" id="upload-section">
+                <div class="section-header">
+                    <span class="section-num">01</span>
+                    <h2>Upload & Identifikasi</h2>
+                </div>
                 <div class="upload-area" id="drop-zone">
-                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg" hidden>
+                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg, image/bmp, image/webp" hidden>
                     <div class="upload-content">
                         <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
@@ -38,49 +42,113 @@
 
 
             <section class="results-container" id="results-container" style="display: none;">
-                <div class="grid-layout">
-
-                    <div class="glass-card preview-card">
-                        <h2 class="card-title">Image Analysis</h2>
+                
+                <!-- Section 01: Identifikasi Hasil -->
+                <div class="glass-card section-card">
+                    <div class="section-header">
+                        <span class="section-num">01</span>
+                        <h2>Hasil Identifikasi</h2>
+                    </div>
+                    <div class="grid-layout">
                         <div class="image-preview">
                             <img id="preview-img" src="" alt="Uploaded preview">
                         </div>
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <span class="stat-label">Classification</span>
-                                <span class="stat-value highlight" id="stat-type">--</span>
+                        <div class="stats-wrapper">
+                            <div class="stats-grid">
+                                <div class="stat-box">
+                                    <span class="stat-label">Klasifikasi</span>
+                                    <span class="stat-value highlight" id="stat-type">--</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Mean Saturation (HSV)</span>
+                                    <span class="stat-value" id="stat-mean-sat">--</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Colored Pixel Ratio</span>
+                                    <span class="stat-value" id="stat-colored-ratio">--%</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Resolusi & Piksel</span>
+                                    <span class="stat-value" id="stat-resolution">--</span>
+                                </div>
                             </div>
-                            <div class="stat-box">
-                                <span class="stat-label">Grayscale Similarity</span>
-                                <span class="stat-value" id="stat-similarity">--%</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label">Resolution</span>
-                                <span class="stat-value" id="stat-resolution">--</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label">Total Pixels</span>
-                                <span class="stat-value" id="stat-pixels">--</span>
+                            <div class="reason-box">
+                                <span class="stat-label">Alasan Keputusan:</span>
+                                <p id="stat-reason">--</p>
                             </div>
                         </div>
-                    </div>
-
-
-                    <div class="glass-card chart-card">
-                        <h2 class="card-title">RGB Histogram</h2>
-                        <div class="chart-container">
-                            <canvas id="rgbChart"></canvas>
-                        </div>
-                        <p class="chart-description">
-                            If the image is Grayscale, the R, G, and B histograms will overlap almost perfectly.
-                        </p>
                     </div>
                 </div>
+
+                <!-- Section 02: Analisis Channel RGB -->
+                <div class="glass-card section-card mt-2">
+                    <div class="section-header">
+                        <span class="section-num">02</span>
+                        <h2>Analisis Channel RGB & Statistik</h2>
+                    </div>
+                    
+                    <div class="channel-preview-grid">
+                        <div class="channel-box">
+                            <h4 style="color: #ff4d4d;">Red Channel</h4>
+                            <img id="channel-r" src="" alt="Red Channel">
+                        </div>
+                        <div class="channel-box">
+                            <h4 style="color: #4dff4d;">Green Channel</h4>
+                            <img id="channel-g" src="" alt="Green Channel">
+                        </div>
+                        <div class="channel-box">
+                            <h4 style="color: #4d4dff;">Blue Channel</h4>
+                            <img id="channel-b" src="" alt="Blue Channel">
+                        </div>
+                    </div>
+
+                    <div class="stats-table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Mean</th>
+                                    <th>Std Dev</th>
+                                </tr>
+                            </thead>
+                            <tbody id="channel-stats-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 03: Representasi Matriks Piksel -->
+                <div class="glass-card section-card mt-2">
+                    <div class="section-header">
+                        <span class="section-num">03</span>
+                        <h2>Representasi Matriks Piksel (Subset 16x16)</h2>
+                    </div>
+                    <p class="section-desc">Menampilkan nilai piksel (0-255) dengan visualisasi <em>heatmap</em> berdasarkan intensitas. Pilih channel untuk melihat matriks masing-masing warna.</p>
+                    
+                    <div class="matrix-tabs">
+                        <button class="matrix-tab active" data-channel="r" style="border-bottom-color: #ff4d4d;">Red</button>
+                        <button class="matrix-tab" data-channel="g" style="border-bottom-color: #4dff4d;">Green</button>
+                        <button class="matrix-tab" data-channel="b" style="border-bottom-color: #4d4dff;">Blue</button>
+                    </div>
+                    
+                    <div class="matrix-container-scroll">
+                        <table class="matrix-table" id="matrix-table">
+                            <!-- Populated by JS -->
+                        </table>
+                    </div>
+                </div>
+
             </section>
 
 
-            <section class="glass-card education-section">
-                <h2 class="card-title">Linear Algebra Behind the Scenes</h2>
+            <section class="glass-card education-section section-card mt-2">
+                <div class="section-header">
+                    <span class="section-num">04</span>
+                    <h2>Aljabar Linear Behind the Scenes</h2>
+                </div>
                 
                 <div class="edu-grid">
                     <div class="edu-card">
@@ -100,7 +168,7 @@ Red   = [255,   0,   0]</code></pre>
                         <div class="formula-box">
                             <p>Y = 0.299R + 0.587G + 0.114B</p>
                         </div>
-                        <p>Our application detects grayscale by analyzing the variance among the R, G, and B components. If <strong>R ≈ G ≈ B</strong> for the majority of the pixels, it is a grayscale image.</p>
+                        <p>Aplikasi ini mendeteksi gambar grayscale menggunakan metode <strong>HSV Color Space</strong>. Gambar dikonversi dari RGB ke HSV, kemudian kami menganalisis matriks channel <em>Saturation</em> (S). Jika rata-rata saturasi (<em>mean_saturation</em>) sangat kecil atau persentase piksel berwarna (S > 15) mendekati 0%, maka gambar diklasifikasikan sebagai <strong>Grayscale</strong>.</p>
                     </div>
                 </div>
             </section>
