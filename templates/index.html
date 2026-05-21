@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Algebra Image Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Linear Algebra <span>Image Classification</span></h1>
+            <p>Analyze and compare grayscale vs color images using digital image processing and matrix transformations.</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section class="glass-card upload-section" id="upload-section">
+                <div class="upload-area" id="drop-zone">
+                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg" hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <h3>Drag & Drop your image here</h3>
+                        <p>or click to browse (JPG, PNG - max 10MB)</p>
+                    </div>
+                </div>
+                <div class="loading-state" id="loading-state" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing pixels...</p>
+                </div>
+            </section>
+
+            <!-- Results Section (Initially Hidden) -->
+            <section class="results-container" id="results-container" style="display: none;">
+                <div class="grid-layout">
+                    <!-- Image Preview & Stats -->
+                    <div class="glass-card preview-card">
+                        <h2 class="card-title">Image Analysis</h2>
+                        <div class="image-preview">
+                            <img id="preview-img" src="" alt="Uploaded preview">
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Classification</span>
+                                <span class="stat-value highlight" id="stat-type">--</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Grayscale Similarity</span>
+                                <span class="stat-value" id="stat-similarity">--%</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Resolution</span>
+                                <span class="stat-value" id="stat-resolution">--</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Total Pixels</span>
+                                <span class="stat-value" id="stat-pixels">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Histogram Chart -->
+                    <div class="glass-card chart-card">
+                        <h2 class="card-title">RGB Histogram</h2>
+                        <div class="chart-container">
+                            <canvas id="rgbChart"></canvas>
+                        </div>
+                        <p class="chart-description">
+                            If the image is Grayscale, the R, G, and B histograms will overlap almost perfectly.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Educational Section -->
+            <section class="glass-card education-section">
+                <h2 class="card-title">Linear Algebra Behind the Scenes</h2>
+                
+                <div class="edu-grid">
+                    <div class="edu-card">
+                        <h3>Matrix Representation</h3>
+                        <p>Every digital image is fundamentally a matrix. A grayscale image is a 2D matrix where each element represents the intensity (0-255). A colored image is a 3D matrix (Tensor) comprising three 2D matrices for the Red, Green, and Blue channels.</p>
+                        <div class="code-block">
+                            <pre><code>Pixel = [R, G, B]
+White = [255, 255, 255]
+Gray  = [120, 120, 120]
+Red   = [255,   0,   0]</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="edu-card">
+                        <h3>Grayscale Conversion</h3>
+                        <p>To convert an RGB vector into a single grayscale scalar, we apply a linear combination using a specific weight vector. This accounts for human eye sensitivity to different colors:</p>
+                        <div class="formula-box">
+                            <p>Y = 0.299R + 0.587G + 0.114B</p>
+                        </div>
+                        <p>Our application detects grayscale by analyzing the variance among the R, G, and B components. If <strong>R ≈ G ≈ B</strong> for the majority of the pixels, it is a grayscale image.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="error-toast" class="toast hidden">
+        <p id="error-message">An error occurred.</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
