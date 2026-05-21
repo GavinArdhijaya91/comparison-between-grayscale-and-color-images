@@ -217,4 +217,67 @@ document.addEventListener('DOMContentLoaded', () => {
         dropZone.style.display = 'block';
         fileInput.value = '';
     }
+
+    // Math Background Animation
+    const canvas = document.getElementById('math-bg');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        const symbols = ['[R, G, B]', 'Y = 0.299R + 0.587G + 0.114B', '∑', 'λ', 'det(A)', 'σ', 'R ≈ G ≈ B', 'T(v) = Av', 'v ∈ ℝ³', 'A^T', '||v||'];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        
+        class MathParticle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * height; // initial random spread
+            }
+            
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 100;
+                this.speed = 0.3 + Math.random() * 0.7;
+                this.text = symbols[Math.floor(Math.random() * symbols.length)];
+                this.fontSize = 14 + Math.random() * 20;
+                this.opacity = 0.05 + Math.random() * 0.15;
+                this.drift = (Math.random() - 0.5) * 0.2;
+            }
+            
+            update() {
+                this.y -= this.speed;
+                this.x += this.drift;
+                if (this.y < -50) {
+                    this.reset();
+                }
+            }
+            
+            draw() {
+                ctx.fillStyle = `rgba(74, 144, 226, ${this.opacity})`;
+                ctx.font = `${this.fontSize}px 'JetBrains Mono', monospace`;
+                ctx.fillText(this.text, this.x, this.y);
+            }
+        }
+        
+        for (let i = 0; i < 40; i++) {
+            particles.push(new MathParticle());
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    }
 });
