@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statColoredRatio = document.getElementById('stat-colored-ratio');
     const statReason = document.getElementById('stat-reason');
     const statResolution = document.getElementById('stat-resolution');
-    const statPixels = document.getElementById('stat-pixels');
     const errorToast = document.getElementById('error-toast');
     const errorMessage = document.getElementById('error-message');
     
@@ -120,8 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statMeanSat.textContent = data.hsv_metrics.mean_saturation;
         statColoredRatio.textContent = `${data.hsv_metrics.colored_ratio}%`;
-        statResolution.textContent = data.resolution;
-        statPixels.textContent = data.total_pixels.toLocaleString();
+        statResolution.textContent = `${data.resolution} (${data.total_pixels.toLocaleString()} px)`;
 
 
         channelR.src = data.channels.r;
