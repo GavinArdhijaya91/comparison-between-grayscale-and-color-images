@@ -7,7 +7,6 @@
   <meta name="description" content="Analisis gambar berwarna vs grayscale menggunakan representasi matriks RGB dan HSV color space." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    
     :root {
       --bg:       #0d0f14;
       --surface:  #13161e;
@@ -615,16 +614,19 @@
 
     
     @media (max-width: 900px) {
-      
+      /* Hero: single column, hide image, center align */
       .hero {
         grid-template-columns: 1fr;
         padding: 100px 1.75rem 60px;
         gap: 0;
       }
+      .hero-content { align-items: center; text-align: center; }
+      .hero-eyebrow { margin-left: auto; margin-right: auto; }
+      .hero-cta { justify-content: center; }
       .hero-img-block { display: none; }
       .hero-title { font-size: clamp(2rem, 6vw, 3rem); }
-      .hero-desc { font-size: 0.95rem; }
-      .hero-scroll { margin-top: 2rem; }
+      .hero-desc { font-size: 0.95rem; margin-left: auto; margin-right: auto; }
+      .hero-scroll { margin-top: 2rem; justify-content: center; }
 
       
       .stat-bar-inner { grid-template-columns: 1fr 1fr; }
@@ -633,18 +635,25 @@
       .stat-item:nth-child(3),
       .stat-item:nth-child(4) { border-top: 1px solid var(--border); }
 
-      
+      /* Sections: Center head */
       .section { padding: 4rem 1.75rem; }
+      .section-head { align-items: center; text-align: center; }
       .section-title { font-size: clamp(1.6rem, 4vw, 2.2rem); }
-      .section-desc { font-size: 0.9rem; margin-bottom: 2rem; }
+      .section-desc { font-size: 0.9rem; margin-bottom: 2rem; margin-left: auto; margin-right: auto; }
 
-      
+      /* Steps: 1 column, center, hide image */
       .steps-grid { grid-template-columns: 1fr; gap: 1rem; }
-      .step-card::before { font-size: 3rem; }
+      .step-card { align-items: center; text-align: center; }
+      .step-img { display: none; }
+      .step-card::before { font-size: 3rem; left: 50%; transform: translateX(-50%); }
 
-      
+      /* Split: 1 column, center text, hide images to save space */
       .split { grid-template-columns: 1fr; gap: 2rem; }
       .split.reverse { direction: ltr; }
+      .split-content { align-items: center; text-align: center; }
+      .split-feature-list li { flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.4rem; padding: 1rem 0; }
+      .feat-icon { margin-top: 0; }
+      .split-img-wrapper { display: none; }
       .split-accent-img { display: none; }
 
       
