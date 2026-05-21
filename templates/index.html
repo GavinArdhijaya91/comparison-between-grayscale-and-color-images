@@ -1,190 +1,1465 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparison Between Grayscale and Color Images</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ImageMatrix — Digital Image Analyzer</title>
+  <meta name="description" content="Analisis gambar berwarna vs grayscale menggunakan representasi matriks RGB dan HSV color space." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── DESIGN TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #13161e;
+      --card:     #1a1e2a;
+      --border:   #252a38;
+      --accent:   #5b8dee;
+      --success:  #4ecb8d;
+      --danger:   #e05b7f;
+      --yellow:   #f0c060;
+      --text:     #e8ecf4;
+      --muted:    #7a8399;
+      --dim:      #4a5068;
+      --r-color:  #ff5f6d;
+      --g-color:  #4ecb8d;
+      --b-color:  #5b8dee;
+      --radius:   16px;
+      --radius-sm: 8px;
+      --shadow:   0 2px 20px rgba(0,0,0,0.5);
+      --t: 0.3s ease;
+    }
+    [data-theme="light"] {
+      --bg:      #f4f5f9;
+      --surface: #ffffff;
+      --card:    #f0f1f7;
+      --border:  #d8dce8;
+      --text:    #111420;
+      --muted:   #5a6080;
+      --dim:     #b0b8d0;
+      --shadow:  0 2px 20px rgba(0,0,0,0.08);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background var(--t), color var(--t);
+      overflow-x: hidden;
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── CANVAS BG ─────────────────────────────────────────────────── */
+    #math-bg {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; opacity: 0.5;
+    }
+    [data-theme="light"] #math-bg { opacity: 0.55; }
+
+    /* ─── NAVBAR ─────────────────────────────────────────────────────── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; height: 64px;
+      background: rgba(13,15,20,0.8);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--t);
+    }
+    [data-theme="light"] .navbar { background: rgba(255,255,255,0.85); }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .nav-logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-size: 1rem;
+    }
+    .nav-name {
+      font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .nav-name span { color: var(--accent); }
+    .nav-links {
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-nav {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius-sm);
+      padding: 0.4rem 0.85rem; cursor: pointer; font-size: 0.8rem;
+      font-weight: 600; font-family: 'Inter', sans-serif;
+      transition: background var(--t), border-color var(--t), transform var(--t);
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .btn-nav:hover { background: var(--border); transform: translateY(-1px); }
+
+    /* ─── SCROLL ANIMATION SETUP ─────────────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.from-left  { transform: translateX(-40px); }
+    .reveal.from-right { transform: translateX(40px); }
+    .reveal.visible {
+      opacity: 1; transform: translate(0);
+    }
+    .reveal.delay-1 { transition-delay: 0.1s; }
+    .reveal.delay-2 { transition-delay: 0.2s; }
+    .reveal.delay-3 { transition-delay: 0.3s; }
+    .reveal.delay-4 { transition-delay: 0.4s; }
+    .reveal.delay-5 { transition-delay: 0.5s; }
+
+    /* ─── HERO ───────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh; position: relative; z-index: 1;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 120px 2.5rem 80px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1px solid rgba(91,141,238,0.3);
+      background: rgba(91,141,238,0.08);
+      padding: 0.35rem 0.85rem; border-radius: 100px;
+      margin-bottom: 1.5rem; width: fit-content;
+    }
+    .hero-eyebrow::before { content: '●'; font-size: 0.5rem; }
+    .hero-title {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      line-height: 1.05; letter-spacing: -0.03em;
+      max-width: 820px; margin-bottom: 1.5rem;
+    }
+    .hero-title em {
+      font-style: italic; font-weight: 300; color: var(--muted);
+    }
+    .hero-title .accent { color: var(--accent); }
+    .hero-desc {
+      font-size: 1.1rem; color: var(--muted); line-height: 1.75;
+      max-width: 560px; margin-bottom: 2.5rem; font-weight: 400;
+    }
+    .hero-desc strong { color: var(--text); font-weight: 600; }
+    .hero-cta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 0.85rem 2rem;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: opacity var(--t), transform var(--t);
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-2px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 0.85rem 1.5rem; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background var(--t), color var(--t), border-color var(--t);
+      display: inline-flex; align-items: center; gap: 0.45rem;
+    }
+    .btn-ghost:hover { background: var(--card); color: var(--text); border-color: var(--dim); }
+    .hero-scroll {
+      position: absolute; bottom: 2.5rem; left: 2.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.78rem; color: var(--dim); letter-spacing: 0.08em;
+      text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+    }
+    .hero-scroll::before {
+      content: ''; display: block; width: 48px; height: 1px; background: var(--dim);
+    }
+    .hero-img-block {
+      position: absolute; right: 2.5rem; top: 50%;
+      transform: translateY(-50%);
+      width: clamp(300px, 38vw, 480px);
+    }
+    .hero-img-stack { position: relative; }
+    .hero-img-main {
+      width: 100%; border-radius: var(--radius);
+      border: 1px solid var(--border); object-fit: cover;
+      aspect-ratio: 4/3;
+    }
+    .hero-img-badge {
+      position: absolute; bottom: -16px; left: -20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 0.7rem 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      box-shadow: var(--shadow);
+    }
+    .hero-img-badge .badge-icon { font-size: 1.3rem; }
+    .hero-img-badge .badge-text { font-size: 0.78rem; font-weight: 600; }
+    .hero-img-badge .badge-sub { font-size: 0.7rem; color: var(--muted); }
+    .hero-img-chip {
+      position: absolute; top: -14px; right: -14px;
+      background: var(--success); color: #fff;
+      border-radius: 100px; padding: 0.3rem 0.8rem;
+      font-size: 0.75rem; font-weight: 700;
+    }
+
+    /* ─── STAT BAR ───────────────────────────────────────────────────── */
+    .stat-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); position: relative; z-index: 1;
+    }
+    .stat-bar-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 2.5rem;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-item {
+      padding: 1.75rem 1.25rem; border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Sora', sans-serif; font-size: 2rem; font-weight: 800;
+      letter-spacing: -0.03em; margin-bottom: 0.2rem; color: var(--text);
+    }
+    .stat-num span { color: var(--accent); }
+    .stat-desc { font-size: 0.82rem; color: var(--muted); font-weight: 400; }
+
+    /* ─── SECTION WRAPPER ────────────────────────────────────────────── */
+    .section {
+      max-width: 1100px; margin: 0 auto;
+      padding: 6rem 2.5rem; position: relative; z-index: 1;
+    }
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 0.85rem; font-weight: 500;
+    }
+    .section-title {
+      font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800; letter-spacing: -0.025em;
+      line-height: 1.15; margin-bottom: 1rem;
+    }
+    .section-title em { font-style: italic; font-weight: 300; color: var(--muted); }
+    .section-desc {
+      font-size: 1rem; color: var(--muted); max-width: 560px;
+      line-height: 1.75; margin-bottom: 3rem;
+    }
+    .section-desc strong { color: var(--text); }
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      max-width: 1100px; margin: 0 auto;
+    }
+
+    /* ─── HOW IT WORKS ───────────────────────────────────────────────── */
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    }
+    .step-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; position: relative;
+      overflow: hidden; transition: border-color var(--t), transform var(--t);
+    }
+    .step-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .step-card::before {
+      content: attr(data-step);
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      font-family: 'Sora', sans-serif; font-size: 4rem; font-weight: 900;
+      color: var(--border); line-height: 1; letter-spacing: -0.05em;
+      pointer-events: none;
+    }
+    .step-img {
+      width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-sm);
+      object-fit: cover; margin-bottom: 1.25rem;
+      border: 1px solid var(--border); background: var(--card);
+    }
+    .step-title {
+      font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .step-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+    .step-tag {
+      display: inline-block; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; color: var(--accent); background: rgba(91,141,238,0.1);
+      border: 1px solid rgba(91,141,238,0.2); border-radius: 4px;
+      padding: 0.18rem 0.5rem; margin-bottom: 0.75rem;
+    }
+
+    /* ─── FEATURE SPLIT ──────────────────────────────────────────────── */
+    .split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    }
+    .split.reverse { direction: rtl; }
+    .split.reverse > * { direction: ltr; }
+    .split-img {
+      position: relative;
+    }
+    .split-main-img {
+      width: 100%; border-radius: var(--radius);
+      border: 1px solid var(--border); object-fit: cover;
+      aspect-ratio: 4/3;
+    }
+    .split-accent-img {
+      position: absolute; bottom: -20px; right: -20px;
+      width: 48%; border-radius: var(--radius-sm);
+      border: 2px solid var(--bg); box-shadow: var(--shadow);
+      object-fit: cover; aspect-ratio: 1;
+    }
+    .split-content {}
+    .split-feature-list { list-style: none; margin-top: 1.5rem; }
+    .split-feature-list li {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .split-feature-list li:last-child { border-bottom: none; }
+    .feat-icon {
+      font-size: 1rem; margin-top: 0.05rem; flex-shrink: 0;
+      width: 28px; height: 28px; display: flex; align-items: center;
+      justify-content: center; background: var(--card);
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+    .feat-text strong { font-weight: 600; font-size: 0.88rem; }
+    .feat-text p { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ─── TECH SECTION ───────────────────────────────────────────────── */
+    .tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .tech-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem; text-align: center;
+      transition: border-color var(--t), transform var(--t);
+    }
+    .tech-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .tech-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .tech-name {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      font-weight: 700; margin-bottom: 0.35rem;
+    }
+    .tech-desc { font-size: 0.78rem; color: var(--muted); }
+
+    /* ─── UPLOAD SECTION ─────────────────────────────────────────────── */
+    .upload-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .upload-header-band {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem; display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .upload-header-band h2 {
+      font-family: 'Sora', sans-serif; font-size: 1.2rem; font-weight: 700;
+    }
+    .upload-header-band p { font-size: 0.83rem; color: var(--muted); }
+    .upload-body { padding: 2rem; }
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 3.5rem 2rem; text-align: center; cursor: pointer;
+      transition: border-color var(--t), background var(--t);
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent); background: rgba(91,141,238,0.04);
+    }
+    .drop-zone.has-file { border-style: solid; border-color: var(--success); }
+    .drop-zone input { display: none; }
+    .drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .drop-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .drop-hint { font-size: 0.8rem; color: var(--muted); }
+    .preview-wrap {
+      margin-top: 1.5rem; display: none;
+      border-radius: var(--radius-sm); overflow: hidden;
+      border: 1px solid var(--border); max-height: 320px;
+    }
+    .preview-wrap.show { display: block; }
+    .preview-wrap img {
+      width: 100%; max-height: 320px; object-fit: contain; background: #000;
+    }
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .btn-secondary {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 0.75rem 1.4rem; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background var(--t), color var(--t), border-color var(--t);
+    }
+    .btn-secondary:hover { background: var(--card); color: var(--text); border-color: var(--dim); }
+
+    /* ─── LOADING ─────────────────────────────────────────────────────── */
+    .loading-bar-wrap { display: none; padding: 2rem; text-align: center; }
+    .loading-bar-wrap.show { display: block; }
+    .loading-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      animation: spin 0.85s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label { font-size: 0.88rem; color: var(--muted); }
+
+    /* ─── RESULTS ─────────────────────────────────────────────────────── */
+    #results { display: none; animation: fadeUp 0.55s ease; }
+    #results.show { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SECTION CARD ────────────────────────────────────────────────── */
+    .r-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .r-card-head {
+      padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--card);
+    }
+    .r-sec-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      font-weight: 700; color: #fff; background: var(--accent);
+      padding: 0.2rem 0.55rem; border-radius: 4px;
+    }
+    .r-sec-title {
+      font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 700;
+    }
+    .r-card-body { padding: 1.75rem; }
+
+    /* ─── IDENTIFICATION ──────────────────────────────────────────────── */
+    .id-badge-large {
+      font-family: 'Sora', sans-serif; font-size: 2.5rem; font-weight: 900;
+      letter-spacing: -0.03em; border-radius: var(--radius-sm);
+      padding: 0.5rem 1.5rem; display: inline-block;
+      border: 2px solid; margin-bottom: 1rem;
+    }
+    .id-badge-large.color { color: var(--success); border-color: var(--success); background: rgba(78,203,141,0.06); }
+    .id-badge-large.gray  { color: var(--muted);   border-color: var(--border);   background: rgba(122,131,153,0.06); }
+    .id-reason {
+      font-size: 0.87rem; color: var(--muted); background: var(--card);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem; margin-bottom: 1.5rem; line-height: 1.6;
+    }
+    .id-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+    }
+    .id-stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 0.85rem 1rem;
+    }
+    .id-stat .k {
+      font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 0.3rem;
+    }
+    .id-stat .v {
+      font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    /* ─── COMPARE ────────────────────────────────────────────────────── */
+    .compare-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .compare-item { text-align: center; }
+    .compare-item img {
+      width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      max-height: 280px; object-fit: contain; background: #000;
+    }
+    .compare-lbl {
+      margin-top: 0.6rem; font-size: 0.82rem; color: var(--muted); font-weight: 600;
+    }
+
+    /* ─── CHANNELS ───────────────────────────────────────────────────── */
+    .ch-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .ch-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1.15rem;
+      transition: border-color var(--t), transform var(--t);
+    }
+    .ch-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .ch-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+      font-weight: 700; display: flex; align-items: center;
+      gap: 0.4rem; margin-bottom: 0.8rem;
+    }
+    .ch-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .ch-main-img {
+      width: 100%; border-radius: 6px; max-height: 140px; object-fit: contain;
+      background: #000; margin-bottom: 0.85rem; border: 1px solid var(--border);
+    }
+    .ch-stat-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem;
+      margin-bottom: 0.85rem;
+    }
+    .ch-stat-cell { font-size: 0.73rem; }
+    .ch-stat-cell .sk { color: var(--muted); }
+    .ch-stat-cell .sv {
+      font-family: 'JetBrains Mono', monospace; font-weight: 600;
+    }
+    .ch-hist { width: 100%; border-radius: 5px; }
+
+    /* ─── CHARTS 2×2 ─────────────────────────────────────────────────── */
+    .chart-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .chart-tile {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1rem; text-align: center;
+    }
+    .chart-tile-label {
+      font-size: 0.72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem;
+    }
+    .chart-tile img { width: 100%; border-radius: 5px; }
+
+    /* ─── MATRIX ─────────────────────────────────────────────────────── */
+    .tab-row { display: flex; gap: 0.45rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 6px; padding: 0.35rem 1rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      font-weight: 700; cursor: pointer; transition: all var(--t);
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .matrix-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .matrix-scroll {
+      overflow: auto; max-height: 380px;
+      background: #090b10; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 0.75rem;
+    }
+    [data-theme="light"] .matrix-scroll { background: #e8eaf2; }
+    .matrix-tbl { border-collapse: collapse; }
+    .matrix-tbl td {
+      width: 26px; height: 26px; text-align: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.55rem;
+      color: #fff; padding: 1px; border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* ─── GRAYSCALE SECTION ──────────────────────────────────────────── */
+    .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; cursor: pointer;
+      background: var(--border); border-radius: 24px; transition: var(--t);
+    }
+    .toggle-track:before {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%; transition: var(--t);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-track:before { transform: translateX(20px); }
+    .toggle-lbl { font-size: 0.88rem; color: var(--muted); cursor: pointer; }
+    .gray-content { display: none; }
+    .gray-content.open { display: block; }
+    .formula-band {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem; display: flex; align-items: center;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .formula-lbl {
+      font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .formula-eq {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.98rem; font-weight: 700; color: var(--yellow);
+    }
+    .gray-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border); background: var(--surface);
+      position: relative; z-index: 1;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto; padding: 3rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .footer-brand {
+      font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700;
+    }
+    .footer-brand span { color: var(--accent); }
+    .footer-note { font-size: 0.8rem; color: var(--muted); }
+    .footer-stack { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .stack-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+      font-weight: 600; border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.2rem 0.55rem; color: var(--muted);
+    }
+
+    /* ─── TOAST ──────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+      background: var(--danger); color: #fff; border-radius: var(--radius-sm);
+      padding: 0.85rem 1.25rem; font-size: 0.85rem; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transform: translateY(120%); opacity: 0;
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.35s;
+      max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero { padding-top: 100px; }
+      .hero-img-block { display: none; }
+      .hero-title { font-size: 2.4rem; }
+      .stat-bar-inner { grid-template-columns: 1fr 1fr; }
+      .stat-item:nth-child(2) { border-right: none; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; gap: 2.5rem; }
+      .split.reverse { direction: ltr; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+      .id-stats { grid-template-columns: 1fr 1fr; }
+      .compare-2 { grid-template-columns: 1fr; }
+      .ch-3 { grid-template-columns: 1fr; }
+      .chart-2x2 { grid-template-columns: 1fr; }
+      .gray-2col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .section { padding: 4rem 1.25rem; }
+      .navbar { padding: 0 1.25rem; }
+      .hero { padding: 90px 1.25rem 60px; }
+      .stat-bar-inner { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .id-stats { grid-template-columns: 1fr 1fr; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <canvas id="math-bg"></canvas>
 
-    <div class="container">
-        <header>
-            <h1><strong>Comparison Between</strong> <br><em>Grayscale & Color Images</em></h1>
-            <p>Analyze and compare <strong>grayscale</strong> vs <strong>color</strong> images using <em>digital image processing</em> and <em>matrix transformations</em>.</p>
-        </header>
+  <canvas id="math-bg"></canvas>
 
-        <main>
+  <!-- ════ NAVBAR ════ -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo">🔬</div>
+      <div class="nav-name">Image<span>Matrix</span></div>
+    </div>
+    <div class="nav-links">
+      <button class="btn-nav" id="lang-toggle" onclick="toggleLang()">
+        <span id="lang-flag">🇮🇩</span>
+        <span id="lang-label">ID</span>
+      </button>
+      <button class="btn-nav" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span>
+      </button>
+    </div>
+  </nav>
 
-            <section class="glass-card upload-section" id="upload-section">
-                <div class="section-header">
-                    <span class="section-num">01</span>
-                    <h2>Upload & Identifikasi</h2>
-                </div>
-                <div class="upload-area" id="drop-zone">
-                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg, image/bmp, image/webp" hidden>
-                    <div class="upload-content">
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                        </svg>
-                        <h3>Drag & Drop your image here</h3>
-                        <p>or click to browse (JPG, PNG - max 10MB)</p>
-                    </div>
-                </div>
-                <div class="loading-state" id="loading-state" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Analyzing pixels...</p>
-                </div>
-            </section>
+  <!-- ════ HERO ════ -->
+  <section style="position:relative; z-index:1;">
+    <div class="hero">
+      <div class="hero-eyebrow reveal" data-i18n="hero.eyebrow">Linear Algebra · HSV Color Space · Matrix Analysis</div>
+      <h1 class="hero-title reveal delay-1">
+        <span data-i18n="hero.title1">Analyze</span>
+        <em data-i18n="hero.title2"> &amp; identify</em><br>
+        <span data-i18n="hero.title3">digital images</span><br>
+        <span class="accent" data-i18n="hero.title4">with matrices.</span>
+      </h1>
+      <p class="hero-desc reveal delay-2">
+        <span data-i18n="hero.desc1">Upload any image and get a</span>
+        <strong data-i18n="hero.desc2"> deep scientific analysis</strong>
+        <span data-i18n="hero.desc3"> — color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.</span>
+      </p>
+      <div class="hero-cta reveal delay-3">
+        <button class="btn-primary" onclick="scrollToUpload()">
+          <span>↓</span> <span data-i18n="hero.cta">Mulai Analisis</span>
+        </button>
+        <button class="btn-ghost" onclick="scrollToHowItWorks()">
+          <span>?</span> <span data-i18n="hero.how">Cara Kerja</span>
+        </button>
+      </div>
+      <div class="hero-scroll reveal delay-4" data-i18n="hero.scroll">scroll to explore</div>
 
+      <!-- floating image block -->
+      <div class="hero-img-block reveal from-right delay-2">
+        <div class="hero-img-stack">
+          <img class="hero-img-main" src="https://picsum.photos/seed/matrix42/600/450" alt="Sample analysis" />
+          <div class="hero-img-badge">
+            <div class="badge-icon">🎨</div>
+            <div>
+              <div class="badge-text" data-i18n="hero.badge1">HSV Analyzed</div>
+              <div class="badge-sub">mean_sat = 47.3</div>
+            </div>
+          </div>
+          <div class="hero-img-chip" data-i18n="hero.chip">COLOR ✓</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-            <section class="results-container" id="results-container" style="display: none;">
-                
+  <!-- ════ STAT BAR ════ -->
+  <div class="stat-bar">
+    <div class="stat-bar-inner">
+      <div class="stat-item reveal">
+        <div class="stat-num">6<span>+</span></div>
+        <div class="stat-desc" data-i18n="stat.sections">Analysis Sections</div>
+      </div>
+      <div class="stat-item reveal delay-1">
+        <div class="stat-num">4<span>×</span></div>
+        <div class="stat-desc" data-i18n="stat.charts">Matplotlib Charts</div>
+      </div>
+      <div class="stat-item reveal delay-2">
+        <div class="stat-num">64<span>²</span></div>
+        <div class="stat-desc" data-i18n="stat.matrix">Matrix Heatmap</div>
+      </div>
+      <div class="stat-item reveal delay-3">
+        <div class="stat-num">0<span>%</span></div>
+        <div class="stat-desc" data-i18n="stat.ml">Machine Learning</div>
+      </div>
+    </div>
+  </div>
 
-                <div class="glass-card section-card">
-                    <div class="section-header">
-                        <span class="section-num">01</span>
-                        <h2>Hasil Identifikasi</h2>
-                    </div>
-                    <div class="grid-layout">
-                        <div class="image-preview">
-                            <img id="preview-img" src="" alt="Uploaded preview">
-                        </div>
-                        <div class="stats-wrapper">
-                            <div class="stats-grid">
-                                <div class="stat-box">
-                                    <span class="stat-label">Klasifikasi</span>
-                                    <span class="stat-value highlight" id="stat-type">--</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Mean Saturation (HSV)</span>
-                                    <span class="stat-value" id="stat-mean-sat">--</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Colored Pixel Ratio</span>
-                                    <span class="stat-value" id="stat-colored-ratio">--%</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">Resolusi & Piksel</span>
-                                    <span class="stat-value" id="stat-resolution">--</span>
-                                </div>
-                            </div>
-                            <div class="reason-box">
-                                <span class="stat-label">Alasan Keputusan:</span>
-                                <p id="stat-reason">--</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <hr class="divider" />
 
+  <!-- ════ HOW IT WORKS ════ -->
+  <section class="section" id="how-it-works">
+    <div class="section-tag reveal" data-i18n="how.tag">How It Works</div>
+    <h2 class="section-title reveal delay-1">
+      <span data-i18n="how.title1">Three steps.</span>
+      <em data-i18n="how.title2"> Pure science.</em>
+    </h2>
+    <p class="section-desc reveal delay-2" data-i18n="how.desc">
+      No black-box ML models. Every decision is based on <strong>linear algebra</strong> and <strong>color space mathematics</strong>.
+    </p>
+    <div class="steps-grid">
+      <div class="step-card reveal" data-step="01">
+        <div class="step-tag">UPLOAD</div>
+        <img class="step-img" src="https://picsum.photos/seed/upload99/600/338" alt="Upload" loading="lazy" />
+        <div class="step-title" data-i18n="step1.title">Upload Your Image</div>
+        <p class="step-desc" data-i18n="step1.desc">Drag &amp; drop or click to select. Supports PNG, JPG, BMP, and WEBP up to 16MB. Your image is processed entirely in-memory — nothing stored on disk.</p>
+      </div>
+      <div class="step-card reveal delay-1" data-step="02">
+        <div class="step-tag">ANALYZE</div>
+        <img class="step-img" src="https://picsum.photos/seed/analyze77/600/338" alt="Analyze" loading="lazy" />
+        <div class="step-title" data-i18n="step2.title">HSV Color Analysis</div>
+        <p class="step-desc" data-i18n="step2.desc">Image is converted to HSV color space. We measure the <strong>mean saturation</strong> and <strong>colored pixel ratio</strong> across the entire saturation channel matrix.</p>
+      </div>
+      <div class="step-card reveal delay-2" data-step="03">
+        <div class="step-tag">VISUALIZE</div>
+        <img class="step-img" src="https://picsum.photos/seed/chart55/600/338" alt="Visualize" loading="lazy" />
+        <div class="step-title" data-i18n="step3.title">Rich Visualizations</div>
+        <p class="step-desc" data-i18n="step3.desc">Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices — all rendered server-side with matplotlib and delivered as crisp PNG images.</p>
+      </div>
+    </div>
+  </section>
 
-                <div class="glass-card section-card mt-2">
-                    <div class="section-header">
-                        <span class="section-num">02</span>
-                        <h2>Analisis Channel RGB & Statistik</h2>
-                    </div>
-                    
-                    <div class="channel-preview-grid">
-                        <div class="channel-box">
-                            <h4 style="color: #ff4d4d;">Red Channel</h4>
-                            <img id="channel-r" src="" alt="Red Channel">
-                        </div>
-                        <div class="channel-box">
-                            <h4 style="color: #4dff4d;">Green Channel</h4>
-                            <img id="channel-g" src="" alt="Green Channel">
-                        </div>
-                        <div class="channel-box">
-                            <h4 style="color: #4d4dff;">Blue Channel</h4>
-                            <img id="channel-b" src="" alt="Blue Channel">
-                        </div>
-                    </div>
+  <hr class="divider" />
 
-                    <div class="stats-table-wrapper">
-                        <table class="stats-table">
-                            <thead>
-                                <tr>
-                                    <th>Channel</th>
-                                    <th>Min</th>
-                                    <th>Max</th>
-                                    <th>Mean</th>
-                                    <th>Std Dev</th>
-                                </tr>
-                            </thead>
-                            <tbody id="channel-stats-body">
+  <!-- ════ SPLIT — METHOD ════ -->
+  <section class="section">
+    <div class="split">
+      <div class="split-img reveal from-left">
+        <img class="split-main-img" src="https://picsum.photos/seed/hsv_space/700/525" alt="HSV Color Space" loading="lazy" />
+        <img class="split-accent-img" src="https://picsum.photos/seed/saturation_ch/400/400" alt="Saturation Channel" loading="lazy" />
+      </div>
+      <div class="split-content reveal from-right delay-1">
+        <div class="section-tag" data-i18n="method.tag">Identification Method</div>
+        <h2 class="section-title">
+          <span data-i18n="method.title1">HSV</span>
+          <em data-i18n="method.title2"> color space,</em><br>
+          <span data-i18n="method.title3">not RGB delta.</span>
+        </h2>
+        <p class="section-desc" data-i18n="method.desc">Most naive implementations compare RGB channel differences. We go deeper — using the <strong>Saturation channel</strong> in HSV space which directly represents <em>colorfulness</em>.</p>
+        <ul class="split-feature-list">
+          <li>
+            <div class="feat-icon">🔍</div>
+            <div class="feat-text">
+              <strong data-i18n="feat1.title">Pillow Mode Check</strong>
+              <p data-i18n="feat1.desc">Images with mode L, LA, or P are instantly classified as grayscale before any computation.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">📐</div>
+            <div class="feat-text">
+              <strong data-i18n="feat2.title">Saturation Matrix</strong>
+              <p data-i18n="feat2.desc">mean_saturation &lt; 8 <em>or</em> colored_pixel_ratio &lt; 1% → GRAYSCALE.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">📊</div>
+            <div class="feat-text">
+              <strong data-i18n="feat3.title">Server-Side Charts</strong>
+              <p data-i18n="feat3.desc">All 6 charts are rendered by matplotlib on the backend and sent as base64 PNG — no JS chart library needed.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="chart-container" style="margin-top: 2rem;">
-                        <canvas id="rgbChart"></canvas>
-                        <p class="chart-description">RGB Color Histogram</p>
-                    </div>
-                </div>
+  <hr class="divider" />
 
+  <!-- ════ SPLIT — MATRIX ════ -->
+  <section class="section">
+    <div class="split reverse">
+      <div class="split-content reveal from-left delay-1">
+        <div class="section-tag" data-i18n="matrix.tag">Linear Algebra Core</div>
+        <h2 class="section-title">
+          <span data-i18n="matrix.title1">Every pixel</span>
+          <em data-i18n="matrix.title2"> is a vector.</em><br>
+          <span data-i18n="matrix.title3">Every image is</span>
+          <em data-i18n="matrix.title4"> a tensor.</em>
+        </h2>
+        <p class="section-desc" data-i18n="matrix.desc">A color image is a 3D tensor of shape <strong>H × W × 3</strong>. A grayscale image collapses to <strong>H × W × 1</strong>. We expose the raw numerical values as an interactive heatmap.</p>
+        <ul class="split-feature-list">
+          <li>
+            <div class="feat-icon">🟥</div>
+            <div class="feat-text">
+              <strong>Pixel = [R, G, B]ᵀ</strong>
+              <p data-i18n="px.desc">Each pixel is a 3-vector in ℝ³ color space.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">🟦</div>
+            <div class="feat-text">
+              <strong>Y = 0.299R + 0.587G + 0.114B</strong>
+              <p data-i18n="luma.desc">Luminance as a linear combination — weights match human eye sensitivity.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">🔷</div>
+            <div class="feat-text">
+              <strong>det(A), rank(A), σ(A)</strong>
+              <p data-i18n="stats.desc">Statistical descriptors computed per-channel across the full matrix.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="split-img reveal from-right">
+        <img class="split-main-img" src="https://picsum.photos/seed/matrix_vis/700/525" alt="Matrix Visualization" loading="lazy" />
+        <img class="split-accent-img" src="https://picsum.photos/seed/rgb_channel/400/400" alt="RGB Channels" loading="lazy" />
+      </div>
+    </div>
+  </section>
 
-                <div class="glass-card section-card mt-2">
-                    <div class="section-header">
-                        <span class="section-num">03</span>
-                        <h2>Representasi Matriks Piksel (Subset 16x16)</h2>
-                    </div>
-                    <p class="section-desc">Menampilkan nilai piksel (0-255) dengan visualisasi <em>heatmap</em> berdasarkan intensitas. Pilih channel untuk melihat matriks masing-masing warna.</p>
-                    
-                    <div class="matrix-tabs">
-                        <button class="matrix-tab active" data-channel="r" style="border-bottom-color: #ff4d4d;">Red</button>
-                        <button class="matrix-tab" data-channel="g" style="border-bottom-color: #4dff4d;">Green</button>
-                        <button class="matrix-tab" data-channel="b" style="border-bottom-color: #4d4dff;">Blue</button>
-                    </div>
-                    
-                    <div class="matrix-container-scroll">
-                        <table class="matrix-table" id="matrix-table">
+  <hr class="divider" />
 
-                        </table>
-                    </div>
-                </div>
+  <!-- ════ TECH STACK ════ -->
+  <section class="section">
+    <div style="text-align:center; max-width: 640px; margin: 0 auto 3rem;">
+      <div class="section-tag reveal" data-i18n="tech.tag">Tech Stack</div>
+      <h2 class="section-title reveal delay-1" data-i18n="tech.title">Built with <em>precision tools.</em></h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="tech-icon">🐍</div>
+        <div class="tech-name">Flask</div>
+        <div class="tech-desc" data-i18n="tech1">Python micro-framework for the backend API and template rendering.</div>
+      </div>
+      <div class="tech-card reveal delay-1">
+        <div class="tech-icon">👁️</div>
+        <div class="tech-name">OpenCV</div>
+        <div class="tech-desc" data-i18n="tech2">HSV conversion, channel splitting, and image decoding pipeline.</div>
+      </div>
+      <div class="tech-card reveal delay-2">
+        <div class="tech-icon">📉</div>
+        <div class="tech-name">Matplotlib</div>
+        <div class="tech-desc" data-i18n="tech3">All charts rendered server-side — histograms, heatmaps, scatter plots.</div>
+      </div>
+      <div class="tech-card reveal delay-3">
+        <div class="tech-icon">🔢</div>
+        <div class="tech-name">NumPy</div>
+        <div class="tech-desc" data-i18n="tech4">Matrix operations, statistical computation, and pixel array manipulation.</div>
+      </div>
+    </div>
+  </section>
 
-            </section>
+  <hr class="divider" />
 
+  <!-- ════ UPLOAD SECTION ════ -->
+  <section class="section" id="upload-section">
+    <div class="section-tag reveal" data-i18n="upload.tag">Try It Now</div>
+    <h2 class="section-title reveal delay-1">
+      <span data-i18n="upload.title1">Upload your image.</span><br>
+      <em data-i18n="upload.title2">See the math.</em>
+    </h2>
+    <p class="section-desc reveal delay-2" data-i18n="upload.desc">Supports PNG, JPG, BMP, WEBP — up to 16MB. Results appear instantly below.</p>
 
-            <section class="glass-card education-section section-card mt-2">
-                <div class="section-header">
-                    <span class="section-num">04</span>
-                    <h2>Aljabar Linear Behind the Scenes</h2>
-                </div>
-                
-                <div class="edu-grid">
-                    <div class="edu-card">
-                        <h3>Matrix Representation</h3>
-                        <p>Every digital image is fundamentally a matrix. A grayscale image is a 2D matrix where each element represents the intensity (0-255). A colored image is a 3D matrix (Tensor) comprising three 2D matrices for the Red, Green, and Blue channels.</p>
-                        <div class="code-block">
-                            <pre><code>Pixel = [R, G, B]
-White = [255, 255, 255]
-Gray  = [120, 120, 120]
-Red   = [255,   0,   0]</code></pre>
-                        </div>
-                    </div>
-                    
-                    <div class="edu-card">
-                        <h3>Grayscale Conversion</h3>
-                        <p>To convert an RGB vector into a single grayscale scalar, we apply a linear combination using a specific weight vector. This accounts for human eye sensitivity to different colors:</p>
-                        <div class="formula-box">
-                            <p>Y = 0.299R + 0.587G + 0.114B</p>
-                        </div>
-                        <p>Aplikasi ini mendeteksi gambar grayscale menggunakan metode <strong>HSV Color Space</strong>. Gambar dikonversi dari RGB ke HSV, kemudian kami menganalisis matriks channel <em>Saturation</em> (S). Jika rata-rata saturasi (<em>mean_saturation</em>) sangat kecil atau persentase piksel berwarna (S > 15) mendekati 0%, maka gambar diklasifikasikan sebagai <strong>Grayscale</strong>.</p>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <div class="upload-wrap reveal delay-2">
+      <div class="upload-header-band">
+        <div>
+          <h2 data-i18n="upload.card.title">Image Analyzer</h2>
+          <p data-i18n="upload.card.sub">Powered by OpenCV + NumPy + Matplotlib</p>
+        </div>
+        <div class="footer-stack">
+          <span class="stack-pill">Flask</span>
+          <span class="stack-pill">OpenCV</span>
+          <span class="stack-pill">NumPy</span>
+          <span class="stack-pill">Matplotlib</span>
+        </div>
+      </div>
+      <div class="upload-body">
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.bmp,.webp" />
+          <div class="drop-icon">🖼️</div>
+          <div class="drop-title" data-i18n="drop.title">Drag &amp; Drop your image here</div>
+          <div class="drop-hint" data-i18n="drop.hint">PNG, JPG, BMP, WEBP — max 16 MB</div>
+        </div>
+        <div class="preview-wrap" id="preview-wrap">
+          <img id="preview-img" src="" alt="Preview" />
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="btn-analyze" disabled onclick="runAnalysis()">
+            <span>⚡</span> <span data-i18n="btn.analyze">Analyze Image</span>
+          </button>
+          <button class="btn-secondary" onclick="resetAll()" data-i18n="btn.reset">Reset</button>
+        </div>
+      </div>
     </div>
 
-
-    <div id="error-toast" class="toast hidden">
-        <p id="error-message">An error occurred.</p>
+    <!-- Loading -->
+    <div class="loading-bar-wrap" id="loading">
+      <div class="loading-ring"></div>
+      <div class="loading-label" data-i18n="loading.text">Analyzing image, generating charts...</div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}?v=4"></script>
+    <!-- Results -->
+    <div id="results">
+
+      <!-- S01 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">01</span>
+          <span class="r-sec-title" data-i18n="sec.01">Identifikasi</span>
+        </div>
+        <div class="r-card-body">
+          <div id="id-badge" class="id-badge-large">—</div>
+          <div class="id-reason" id="id-reason">—</div>
+          <div class="id-stats">
+            <div class="id-stat"><div class="k" data-i18n="stat.mean_sat">Mean Saturation</div><div class="v" id="v-mean-sat">—</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.colored_ratio">Colored Pixel Ratio</div><div class="v" id="v-colored-ratio">—</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.dimension">Dimensi</div><div class="v" id="v-dimension">—</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.total_px">Total Piksel</div><div class="v" id="v-total-px">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S02 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">02</span>
+          <span class="r-sec-title" data-i18n="sec.02">Perbandingan Gambar</span>
+        </div>
+        <div class="r-card-body">
+          <div class="compare-2">
+            <div class="compare-item">
+              <img id="img-original" src="" alt="Original" />
+              <div class="compare-lbl" data-i18n="label.original">Gambar Asli</div>
+            </div>
+            <div class="compare-item">
+              <img id="img-gray" src="" alt="Grayscale" />
+              <div class="compare-lbl" data-i18n="label.grayscale">Representasi Grayscale</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S03 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">03</span>
+          <span class="r-sec-title" data-i18n="sec.03">Visualisasi Channel RGB</span>
+        </div>
+        <div class="r-card-body">
+          <div class="ch-3">
+            <div class="ch-card">
+              <div class="ch-label"><span class="ch-dot" style="background:var(--r-color)"></span>Red Channel</div>
+              <img class="ch-main-img" id="ch-r-img" src="" alt="R" />
+              <div class="ch-stat-row">
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-r-min">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-r-max">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-r-mean">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-r-std">—</span></div>
+              </div>
+              <img class="ch-hist" id="ch-r-hist" src="" alt="R Hist" />
+            </div>
+            <div class="ch-card">
+              <div class="ch-label"><span class="ch-dot" style="background:var(--g-color)"></span>Green Channel</div>
+              <img class="ch-main-img" id="ch-g-img" src="" alt="G" />
+              <div class="ch-stat-row">
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-g-min">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-g-max">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-g-mean">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-g-std">—</span></div>
+              </div>
+              <img class="ch-hist" id="ch-g-hist" src="" alt="G Hist" />
+            </div>
+            <div class="ch-card">
+              <div class="ch-label"><span class="ch-dot" style="background:var(--b-color)"></span>Blue Channel</div>
+              <img class="ch-main-img" id="ch-b-img" src="" alt="B" />
+              <div class="ch-stat-row">
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-b-min">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-b-max">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-b-mean">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-b-std">—</span></div>
+              </div>
+              <img class="ch-hist" id="ch-b-hist" src="" alt="B Hist" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S04 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">04</span>
+          <span class="r-sec-title" data-i18n="sec.04">Analisis Chart</span>
+        </div>
+        <div class="r-card-body">
+          <div class="chart-2x2">
+            <div class="chart-tile"><div class="chart-tile-label" data-i18n="chart.hist_rgb">Histogram RGB</div><img id="chart-hist-rgb" src="" alt="RGB Histogram" /></div>
+            <div class="chart-tile"><div class="chart-tile-label" data-i18n="chart.bar_stats">Bar Chart Statistik</div><img id="chart-bar-stats" src="" alt="Bar Stats" /></div>
+            <div class="chart-tile"><div class="chart-tile-label" data-i18n="chart.heatmap">Heatmap Saturasi HSV</div><img id="chart-heatmap" src="" alt="Heatmap" /></div>
+            <div class="chart-tile"><div class="chart-tile-label" data-i18n="chart.scatter">Scatter R vs G</div><img id="chart-scatter" src="" alt="Scatter" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S05 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">05</span>
+          <span class="r-sec-title" data-i18n="sec.05">Representasi Matriks</span>
+        </div>
+        <div class="r-card-body">
+          <div class="tab-row">
+            <button class="tab-btn active" data-tab="R" onclick="switchMatrix('R',this)">R</button>
+            <button class="tab-btn" data-tab="G" onclick="switchMatrix('G',this)">G</button>
+            <button class="tab-btn" data-tab="B" onclick="switchMatrix('B',this)">B</button>
+            <button class="tab-btn" data-tab="Y" onclick="switchMatrix('Y',this)">Grayscale Y</button>
+          </div>
+          <div class="matrix-meta" id="matrix-info">—</div>
+          <div class="matrix-scroll">
+            <table class="matrix-tbl" id="matrix-tbl"></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- S06 -->
+      <div class="r-card">
+        <div class="r-card-head">
+          <span class="r-sec-num">06</span>
+          <span class="r-sec-title" data-i18n="sec.06">Konversi Grayscale</span>
+        </div>
+        <div class="r-card-body">
+          <div class="toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" id="gray-toggle" onchange="toggleGray()" />
+              <span class="toggle-track"></span>
+            </label>
+            <label class="toggle-lbl" for="gray-toggle" data-i18n="toggle.gray">Tampilkan detail konversi grayscale</label>
+          </div>
+          <div class="gray-content" id="gray-content">
+            <div class="formula-band">
+              <div>
+                <div class="formula-lbl" data-i18n="formula.label">Rumus Luminance ITU-R BT.601</div>
+                <div class="formula-eq">Y = 0.299×R + 0.587×G + 0.114×B</div>
+              </div>
+            </div>
+            <div class="compare-2">
+              <div class="compare-item">
+                <img id="gray-orig-img" src="" alt="Original" />
+                <div class="compare-lbl" data-i18n="label.original">Gambar Asli</div>
+              </div>
+              <div class="compare-item">
+                <img id="gray-res-img" src="" alt="Gray Result" />
+                <div class="compare-lbl" data-i18n="label.grayscale">Hasil Konversi</div>
+              </div>
+            </div>
+            <div class="gray-2col">
+              <div class="chart-tile" style="margin-top:1.25rem">
+                <div class="chart-tile-label" data-i18n="chart.gray_compare">Perbandingan Mean</div>
+                <img id="chart-gray-cmp" src="" alt="Gray Compare" />
+              </div>
+              <div class="chart-tile" style="margin-top:1.25rem;text-align:left;padding:1.25rem">
+                <div class="chart-tile-label" style="margin-bottom:1rem" data-i18n="stat.gray_stats">Statistik Y</div>
+                <div class="ch-stat-row" style="grid-template-columns:1fr 1fr;gap:0.75rem">
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="gray-min">—</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="gray-max">—</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="gray-mean">—</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std Dev</span>: <span class="sv" id="gray-std">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /#results -->
+  </section>
+
+  <!-- ════ FOOTER ════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">Image<span>Matrix</span></div>
+        <div class="footer-note" style="margin-top:0.35rem" data-i18n="footer.note">Tugas Aljabar Linear · Analisis Citra Digital</div>
+      </div>
+      <div class="footer-stack">
+        <span class="stack-pill">Python</span>
+        <span class="stack-pill">Flask</span>
+        <span class="stack-pill">OpenCV</span>
+        <span class="stack-pill">NumPy</span>
+        <span class="stack-pill">Matplotlib</span>
+        <span class="stack-pill">Pillow</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ════ SCRIPTS ════ -->
+  <script>
+  /* ── I18N ─────────────────────────────────────────────────────────── */
+  const LANG = {
+    ID: {
+      "hero.eyebrow":"Aljabar Linear · HSV Color Space · Analisis Matriks",
+      "hero.title1":"Analisis",
+      "hero.title2":" &amp; identifikasi",
+      "hero.title3":"gambar digital",
+      "hero.title4":"dengan matriks.",
+      "hero.desc1":"Upload gambar apapun dan dapatkan",
+      "hero.desc2":" analisis ilmiah yang mendalam",
+      "hero.desc3":" — klasifikasi warna, breakdown channel RGB, heatmap saturasi HSV, visualisasi matriks piksel, dan banyak lagi.",
+      "hero.cta":"Mulai Analisis","hero.how":"Cara Kerja","hero.scroll":"scroll untuk menjelajahi",
+      "hero.badge1":"Teranalisis HSV","hero.chip":"BERWARNA ✓",
+      "stat.sections":"Bagian Analisis","stat.charts":"Chart Matplotlib",
+      "stat.matrix":"Heatmap Matriks","stat.ml":"Machine Learning",
+      "how.tag":"Cara Kerja","how.title1":"Tiga langkah.","how.title2":" Sains murni.",
+      "how.desc":"Tanpa model ML black-box. Setiap keputusan berbasis aljabar linear dan matematika ruang warna.",
+      "step1.title":"Upload Gambar","step1.desc":"Drag &amp; drop atau klik untuk memilih. Mendukung PNG, JPG, BMP, dan WEBP hingga 16MB.",
+      "step2.title":"Analisis HSV","step2.desc":"Gambar dikonversi ke ruang warna HSV. Kami mengukur mean saturasi dan colored pixel ratio di seluruh matriks channel saturasi.",
+      "step3.title":"Visualisasi Kaya","step3.desc":"Dapatkan histogram, bar chart, heatmap, scatter plot, dan matriks piksel — semua dirender server-side oleh matplotlib.",
+      "method.tag":"Metode Identifikasi","method.title1":"HSV","method.title2":" color space,","method.title3":"bukan delta RGB.",
+      "method.desc":"Kebanyakan implementasi naif membandingkan selisih channel RGB. Kami lebih dalam — menggunakan channel Saturasi di ruang HSV yang langsung merepresentasikan <em>warna</em>.",
+      "feat1.title":"Cek Mode Pillow","feat1.desc":"Gambar dengan mode L, LA, atau P langsung diklasifikasikan sebagai grayscale sebelum komputasi.",
+      "feat2.title":"Matriks Saturasi","feat2.desc":"mean_saturation < 8 atau colored_pixel_ratio < 1% → GRAYSCALE.",
+      "feat3.title":"Chart Server-Side","feat3.desc":"Semua 6 chart dirender oleh matplotlib di backend dan dikirim sebagai base64 PNG.",
+      "matrix.tag":"Inti Aljabar Linear","matrix.title1":"Setiap piksel","matrix.title2":" adalah vektor.","matrix.title3":"Setiap gambar adalah","matrix.title4":" tensor.",
+      "matrix.desc":"Gambar berwarna adalah tensor 3D berukuran H × W × 3. Grayscale runtuh menjadi H × W × 1. Kami mengekspos nilai numerik mentah sebagai heatmap interaktif.",
+      "px.desc":"Setiap piksel adalah vektor-3 dalam ruang warna ℝ³.",
+      "luma.desc":"Luminansi sebagai kombinasi linear — bobot sesuai sensitivitas mata manusia.",
+      "stats.desc":"Deskriptor statistik dihitung per-channel pada seluruh matriks.",
+      "tech.tag":"Stack Teknologi","tech.title":"Dibangun dengan alat presisi.",
+      "tech1":"Python micro-framework untuk backend API dan rendering template.",
+      "tech2":"Konversi HSV, pemisahan channel, dan pipeline dekoding gambar.",
+      "tech3":"Semua chart dirender server-side — histogram, heatmap, scatter plot.",
+      "tech4":"Operasi matriks, komputasi statistik, dan manipulasi array piksel.",
+      "upload.tag":"Coba Sekarang","upload.title1":"Upload gambarmu.","upload.title2":"Lihat matematikanya.",
+      "upload.desc":"Mendukung PNG, JPG, BMP, WEBP — hingga 16MB. Hasil muncul langsung di bawah.",
+      "upload.card.title":"Image Analyzer","upload.card.sub":"Diperkuat oleh OpenCV + NumPy + Matplotlib",
+      "drop.title":"Drag &amp; Drop gambar ke sini","drop.hint":"PNG, JPG, BMP, WEBP — maks 16 MB",
+      "btn.analyze":"Analisis Gambar","btn.reset":"Reset",
+      "loading.text":"Menganalisis gambar, membuat chart...",
+      "sec.01":"Identifikasi","sec.02":"Perbandingan Gambar","sec.03":"Visualisasi Channel RGB",
+      "sec.04":"Analisis Chart","sec.05":"Representasi Matriks","sec.06":"Konversi Grayscale",
+      "badge.color":"BERWARNA","badge.gray":"GRAYSCALE",
+      "label.original":"Gambar Asli","label.grayscale":"Representasi Grayscale",
+      "stat.min":"Min","stat.max":"Max","stat.mean":"Rata-rata","stat.std":"Std Dev",
+      "stat.mean_sat":"Mean Saturation","stat.colored_ratio":"Colored Pixel Ratio",
+      "stat.dimension":"Dimensi","stat.total_px":"Total Piksel","stat.gray_stats":"Statistik Y",
+      "toggle.gray":"Tampilkan detail konversi grayscale",
+      "formula.label":"Rumus Luminance ITU-R BT.601",
+      "chart.hist_rgb":"Histogram RGB","chart.bar_stats":"Bar Chart Statistik",
+      "chart.heatmap":"Heatmap Saturasi HSV","chart.scatter":"Scatter R vs G",
+      "chart.gray_compare":"Perbandingan Mean Channel",
+      "reason.color":"Gambar diklasifikasikan BERWARNA — mean saturasi HSV ≥ 8 dan colored pixel ratio ≥ 1%.",
+      "reason.gray":"Gambar diklasifikasikan GRAYSCALE — mean saturasi HSV sangat rendah atau hampir tidak ada piksel berwarna.",
+      "reason.direct":"Gambar diklasifikasikan GRAYSCALE — mode file asli:",
+      "matrix.info":"Menampilkan subset %R×%C dari gambar %W×%H piksel penuh.",
+      "footer.note":"Tugas Aljabar Linear · Analisis Citra Digital"
+    },
+    EN: {
+      "hero.eyebrow":"Linear Algebra · HSV Color Space · Matrix Analysis",
+      "hero.title1":"Analyze","hero.title2":" &amp; identify","hero.title3":"digital images","hero.title4":"with matrices.",
+      "hero.desc1":"Upload any image and get a","hero.desc2":" deep scientific analysis",
+      "hero.desc3":" — color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.",
+      "hero.cta":"Start Analysis","hero.how":"How It Works","hero.scroll":"scroll to explore",
+      "hero.badge1":"HSV Analyzed","hero.chip":"COLOR ✓",
+      "stat.sections":"Analysis Sections","stat.charts":"Matplotlib Charts",
+      "stat.matrix":"Matrix Heatmap","stat.ml":"Machine Learning",
+      "how.tag":"How It Works","how.title1":"Three steps.","how.title2":" Pure science.",
+      "how.desc":"No black-box ML models. Every decision is based on linear algebra and color space mathematics.",
+      "step1.title":"Upload Your Image","step1.desc":"Drag & drop or click to select. Supports PNG, JPG, BMP, and WEBP up to 16MB.",
+      "step2.title":"HSV Color Analysis","step2.desc":"Image is converted to HSV color space. We measure the mean saturation and colored pixel ratio across the full saturation channel matrix.",
+      "step3.title":"Rich Visualizations","step3.desc":"Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices — all rendered server-side with matplotlib.",
+      "method.tag":"Identification Method","method.title1":"HSV","method.title2":" color space,","method.title3":"not RGB delta.",
+      "method.desc":"Most naive implementations compare RGB channel differences. We go deeper — using the Saturation channel in HSV space which directly represents colorfulness.",
+      "feat1.title":"Pillow Mode Check","feat1.desc":"Images with mode L, LA, or P are instantly classified as grayscale before any computation.",
+      "feat2.title":"Saturation Matrix","feat2.desc":"mean_saturation < 8 or colored_pixel_ratio < 1% → GRAYSCALE.",
+      "feat3.title":"Server-Side Charts","feat3.desc":"All 6 charts are rendered by matplotlib on the backend and sent as base64 PNG.",
+      "matrix.tag":"Linear Algebra Core","matrix.title1":"Every pixel","matrix.title2":" is a vector.","matrix.title3":"Every image is","matrix.title4":" a tensor.",
+      "matrix.desc":"A color image is a 3D tensor of shape H × W × 3. Grayscale collapses to H × W × 1. We expose raw numerical values as an interactive heatmap.",
+      "px.desc":"Each pixel is a 3-vector in ℝ³ color space.",
+      "luma.desc":"Luminance as a linear combination — weights match human eye sensitivity.",
+      "stats.desc":"Statistical descriptors computed per-channel across the full matrix.",
+      "tech.tag":"Tech Stack","tech.title":"Built with precision tools.",
+      "tech1":"Python micro-framework for the backend API and template rendering.",
+      "tech2":"HSV conversion, channel splitting, and image decoding pipeline.",
+      "tech3":"All charts rendered server-side — histograms, heatmaps, scatter plots.",
+      "tech4":"Matrix operations, statistical computation, and pixel array manipulation.",
+      "upload.tag":"Try It Now","upload.title1":"Upload your image.","upload.title2":"See the math.",
+      "upload.desc":"Supports PNG, JPG, BMP, WEBP — up to 16MB. Results appear instantly below.",
+      "upload.card.title":"Image Analyzer","upload.card.sub":"Powered by OpenCV + NumPy + Matplotlib",
+      "drop.title":"Drag & Drop your image here","drop.hint":"PNG, JPG, BMP, WEBP — max 16 MB",
+      "btn.analyze":"Analyze Image","btn.reset":"Reset",
+      "loading.text":"Analyzing image, generating charts...",
+      "sec.01":"Identification","sec.02":"Image Comparison","sec.03":"RGB Channel Visualization",
+      "sec.04":"Chart Analysis","sec.05":"Matrix Representation","sec.06":"Grayscale Conversion",
+      "badge.color":"COLOR","badge.gray":"GRAYSCALE",
+      "label.original":"Original Image","label.grayscale":"Grayscale Representation",
+      "stat.min":"Min","stat.max":"Max","stat.mean":"Mean","stat.std":"Std Dev",
+      "stat.mean_sat":"Mean Saturation","stat.colored_ratio":"Colored Pixel Ratio",
+      "stat.dimension":"Dimension","stat.total_px":"Total Pixels","stat.gray_stats":"Y Statistics",
+      "toggle.gray":"Show grayscale conversion details",
+      "formula.label":"Luminance Formula ITU-R BT.601",
+      "chart.hist_rgb":"RGB Histogram","chart.bar_stats":"Channel Stats Bar Chart",
+      "chart.heatmap":"Saturation Heatmap (HSV-S)","chart.scatter":"Scatter R vs G",
+      "chart.gray_compare":"Channel Mean Comparison",
+      "reason.color":"Image classified as COLOR — HSV mean saturation ≥ 8 and colored pixel ratio ≥ 1%.",
+      "reason.gray":"Image classified as GRAYSCALE — HSV mean saturation is very low or barely any colored pixels.",
+      "reason.direct":"Image classified as GRAYSCALE — original file mode:",
+      "matrix.info":"Showing %R×%C subset of full %W×%H pixel image.",
+      "footer.note":"Linear Algebra Assignment · Digital Image Analysis"
+    }
+  };
+
+  let lang = localStorage.getItem('lang') || 'ID';
+  let theme = localStorage.getItem('theme') || 'dark';
+  let currentFile = null;
+  let analysisData = null;
+  let matrixTab = 'R';
+
+  function applyLang(l) {
+    lang = l;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n');
+      if (LANG[l][k] !== undefined) el.innerHTML = LANG[l][k];
+    });
+    document.getElementById('lang-flag').textContent = l === 'ID' ? '🇮🇩' : '🇬🇧';
+    document.getElementById('lang-label').textContent = l;
+    localStorage.setItem('lang', l);
+    if (analysisData) updateIdText(analysisData);
+  }
+  function toggleLang() { applyLang(lang === 'ID' ? 'EN' : 'ID'); }
+
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', t);
+  }
+  function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+  /* ── SCROLL REVEAL ─────────────────────────────────────────────────── */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  /* ── SCROLL HELPERS ────────────────────────────────────────────────── */
+  function scrollToUpload() { document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth' }); }
+  function scrollToHowItWorks() { document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' }); }
+
+  /* ── DROP ZONE ─────────────────────────────────────────────────────── */
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+  function setFile(f) {
+    currentFile = f;
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('preview-wrap').classList.add('show');
+      dropZone.classList.add('has-file');
+    };
+    r.readAsDataURL(f);
+    document.getElementById('btn-analyze').disabled = false;
+  }
+
+  function resetAll() {
+    currentFile = null; analysisData = null;
+    fileInput.value = '';
+    document.getElementById('preview-img').src = '';
+    document.getElementById('preview-wrap').classList.remove('show');
+    dropZone.classList.remove('has-file', 'dragover');
+    document.getElementById('btn-analyze').disabled = true;
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('gray-toggle').checked = false;
+    document.getElementById('gray-content').classList.remove('open');
+  }
+
+  /* ── ANALYSIS ──────────────────────────────────────────────────────── */
+  async function runAnalysis() {
+    if (!currentFile) return;
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').classList.remove('show');
+
+    const form = new FormData();
+    form.append('image', currentFile);
+    try {
+      const res = await fetch('/analyze', { method: 'POST', body: form });
+      const d = await res.json();
+      if (!res.ok || d.error) throw new Error(d.error || 'Server error');
+      analysisData = d;
+      renderResults(d);
+    } catch(err) { showToast(err.message); }
+    finally { document.getElementById('loading').classList.remove('show'); }
+  }
+
+  function updateIdText(d) {
+    const L = LANG[lang];
+    const badge = document.getElementById('id-badge');
+    const reason = document.getElementById('id-reason');
+    if (d.is_grayscale) {
+      badge.textContent = L['badge.gray']; badge.className = 'id-badge-large gray';
+      reason.textContent = (d.original_mode !== 'RGB' && d.original_mode !== 'RGBA')
+        ? L['reason.direct'] + ' ' + d.original_mode + '.'
+        : L['reason.gray'];
+    } else {
+      badge.textContent = L['badge.color']; badge.className = 'id-badge-large color';
+      reason.textContent = L['reason.color'];
+    }
+  }
+
+  function renderResults(d) {
+    updateIdText(d);
+    document.getElementById('v-mean-sat').textContent = d.mean_saturation;
+    document.getElementById('v-colored-ratio').textContent = (d.colored_pixel_ratio * 100).toFixed(2) + '%';
+    document.getElementById('v-dimension').textContent = d.width + ' × ' + d.height;
+    document.getElementById('v-total-px').textContent = d.total_pixels.toLocaleString();
+
+    document.getElementById('img-original').src = 'data:' + d.original_mime + ';base64,' + d.original_b64;
+    document.getElementById('img-gray').src = 'data:image/png;base64,' + d.grayscale.image_b64;
+
+    setChImg('r', d.channels.R); setChImg('g', d.channels.G); setChImg('b', d.channels.B);
+
+    document.getElementById('chart-hist-rgb').src = 'data:image/png;base64,' + d.charts.histogram_rgb_b64;
+    document.getElementById('chart-bar-stats').src = 'data:image/png;base64,' + d.charts.bar_stats_b64;
+    document.getElementById('chart-heatmap').src = 'data:image/png;base64,' + d.charts.heatmap_saturation_b64;
+    document.getElementById('chart-scatter').src = 'data:image/png;base64,' + d.charts.scatter_rgb_b64;
+
+    matrixTab = 'R';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'R'));
+    renderMatrix('R', d);
+
+    document.getElementById('gray-orig-img').src = 'data:' + d.original_mime + ';base64,' + d.original_b64;
+    document.getElementById('gray-res-img').src = 'data:image/png;base64,' + d.grayscale.image_b64;
+    document.getElementById('chart-gray-cmp').src = 'data:image/png;base64,' + d.grayscale.comparison_chart_b64;
+    document.getElementById('gray-min').textContent = d.grayscale.stats.min;
+    document.getElementById('gray-max').textContent = d.grayscale.stats.max;
+    document.getElementById('gray-mean').textContent = d.grayscale.stats.mean;
+    document.getElementById('gray-std').textContent = d.grayscale.stats.std;
+
+    const results = document.getElementById('results');
+    results.style.display = 'block';
+    results.classList.add('show');
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setChImg(ch, data) {
+    document.getElementById('ch-' + ch + '-img').src = 'data:image/png;base64,' + data.image_b64;
+    document.getElementById('ch-' + ch + '-min').textContent = data.stats.min;
+    document.getElementById('ch-' + ch + '-max').textContent = data.stats.max;
+    document.getElementById('ch-' + ch + '-mean').textContent = data.stats.mean;
+    document.getElementById('ch-' + ch + '-std').textContent = data.stats.std;
+    document.getElementById('ch-' + ch + '-hist').src = 'data:image/png;base64,' + data.histogram_b64;
+  }
+
+  function switchMatrix(tab, btn) {
+    matrixTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (analysisData) renderMatrix(tab, analysisData);
+  }
+
+  function renderMatrix(tab, d) {
+    let matrix, shape, rgb;
+    if      (tab === 'R') { matrix = d.channels.R.matrix; shape = d.channels.R.matrix_shape; rgb = '255,80,100'; }
+    else if (tab === 'G') { matrix = d.channels.G.matrix; shape = d.channels.G.matrix_shape; rgb = '70,200,130'; }
+    else if (tab === 'B') { matrix = d.channels.B.matrix; shape = d.channels.B.matrix_shape; rgb = '80,140,240'; }
+    else                  { matrix = d.grayscale.matrix;  shape = d.grayscale.matrix_shape;  rgb = '160,168,192'; }
+
+    const info = LANG[lang]['matrix.info']
+      .replace('%R', shape[0]).replace('%C', shape[1])
+      .replace('%W', d.width).replace('%H', d.height);
+    document.getElementById('matrix-info').textContent = info;
+
+    const tbl = document.getElementById('matrix-tbl');
+    tbl.innerHTML = '';
+    matrix.forEach(row => {
+      const tr = document.createElement('tr');
+      row.forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = val;
+        td.style.backgroundColor = `rgba(${rgb},${Math.max(0.07, val/255)})`;
+        tr.appendChild(td);
+      });
+      tbl.appendChild(tr);
+    });
+  }
+
+  function toggleGray() {
+    document.getElementById('gray-content').classList.toggle('open',
+      document.getElementById('gray-toggle').checked);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4000);
+  }
+
+  /* ── CANVAS MATH BG ────────────────────────────────────────────────── */
+  window._mathBgColor = () =>
+    document.documentElement.getAttribute('data-theme') === 'light'
+      ? '28,52,140'    /* dark navy on light bg */
+      : '91,141,238';  /* accent blue on dark bg */
+
+  (function() {
+    const c = document.getElementById('math-bg');
+    const ctx = c.getContext('2d');
+    let W, H, pts = [];
+    const syms = ['A·x=b','∑','det(M)','Y=0.299R+0.587G+0.114B','λ','HSV','σ²','R≈G≈B','T(v)=Av','‖v‖','[R G B]ᵀ','rank(A)','∇f','H×W×3','S<8','μ','Ax=λx','||w||₂'];
+    function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    class P {
+      constructor() { this.init(); this.y = Math.random() * H; }
+      init() {
+        this.x = Math.random() * W; this.y = H + 20;
+        this.s = syms[0|(Math.random()*syms.length)];
+        this.fs = 11 + Math.random() * 14;
+        this.sp = 0.2 + Math.random() * 0.55;
+        this.op = 0.12 + Math.random() * 0.22;
+        this.dx = (Math.random()-.5) * 0.14;
+      }
+      tick() { this.y -= this.sp; this.x += this.dx; if (this.y < -30) this.init(); }
+      draw() {
+        ctx.fillStyle = `rgba(${window._mathBgColor()},${this.op})`;
+        ctx.font = `${this.fs}px 'JetBrains Mono',monospace`;
+        ctx.fillText(this.s, this.x, this.y);
+      }
+    }
+    for (let i = 0; i < 55; i++) pts.push(new P());
+    (function loop() { ctx.clearRect(0,0,W,H); pts.forEach(p=>{p.tick();p.draw();}); requestAnimationFrame(loop); })();
+  })();
+
+  /* ── INIT ──────────────────────────────────────────────────────────── */
+  applyLang(lang);
+  applyTheme(theme);
+  </script>
 </body>
 </html>
