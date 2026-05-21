@@ -148,7 +148,88 @@ def make_scatter_rgb(r, g, b, n_samples=500):
     ax.text(0.98, 0.02, 'dot size ∝ Blue', transform=ax.transAxes,
             ha='right', va='bottom', color='#7a8399', fontsize=7)
     fig.tight_layout(pad=0.6)
+    fig.tight_layout(pad=0.6)
     return fig_to_b64(fig)
+
+def compute_svd(img_gray):
+    h, w = img_gray.shape
+    max_dim = 400
+    if max(h, w) > max_dim:
+        scale = max_dim / max(h, w)
+        img_small = cv2.resize(img_gray, (int(w*scale), int(h*scale)))
+    else:
+        img_small = img_gray.copy()
+        
+    img_float = img_small.astype(np.float32)
+    U, S, Vt = np.linalg.svd(img_float, full_matrices=False)
+    
+    total_var = np.sum(S**2)
+    if total_var == 0:
+        total_var = 1e-10
+    explained_variance_ratio = (S**2) / total_var
+    cumulative_variance = np.cumsum(explained_variance_ratio)
+    
+    k_90 = int(np.argmax(cumulative_variance >= 0.90)) + 1
+    k_95 = int(np.argmax(cumulative_variance >= 0.95)) + 1
+    k_99 = int(np.argmax(cumulative_variance >= 0.99)) + 1
+    
+    fig, ax1 = plt.subplots(figsize=(6.5, 3.2), dpi=110)
+    fig.patch.set_facecolor('#13161e')
+    ax1.set_facecolor('#1a1e2a')
+    
+    plot_k = min(50, len(S))
+    ax1.plot(range(1, plot_k+1), cumulative_variance[:plot_k]*100, color='#ff5f6d', marker='o', markersize=4, linestyle='-')
+    ax1.set_xlabel('Number of Singular Values (k)', color='#7a8399', fontsize=8)
+    ax1.set_ylabel('Cumulative Explained Variance (%)', color='#7a8399', fontsize=8)
+    ax1.tick_params(colors='#e8ecf4', labelsize=8)
+    ax1.grid(color='#252a38', linestyle='--', linewidth=0.5)
+    for spine in ax1.spines.values():
+        spine.set_edgecolor('#252a38')
+    fig.tight_layout(pad=0.6)
+    
+    return {
+        'scree_plot_b64': fig_to_b64(fig),
+        'rank': int(np.linalg.matrix_rank(img_float)),
+        'top_singular_value': float(S[0]),
+        'k_90': k_90,
+        'k_95': k_95,
+        'k_99': k_99
+    }
+
+def compute_pca(img_rgb):
+    N = img_rgb.shape[0] * img_rgb.shape[1]
+    X = img_rgb.reshape(-1, 3).astype(np.float64)
+    
+    if N > 50000:
+        indices = np.random.choice(N, 50000, replace=False)
+        X = X[indices]
+    
+    mean_vec = np.mean(X, axis=0)
+    X_centered = X - mean_vec
+    
+    cov_matrix = np.cov(X_centered, rowvar=False)
+    
+    eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
+    
+    idx = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    
+    total_eig = np.sum(eigenvalues)
+    if total_eig == 0:
+        total_eig = 1e-10
+    explained_variance = (eigenvalues / total_eig) * 100
+    
+    primary_color_idx = int(np.argmax(np.abs(eigenvectors[:, 0])))
+    channels = ["Red", "Green", "Blue"]
+    
+    return {
+        'covariance_matrix': cov_matrix.tolist(),
+        'eigenvalues': eigenvalues.tolist(),
+        'eigenvectors': eigenvectors.tolist(),
+        'explained_variance': explained_variance.tolist(),
+        'dominant_axis': channels[primary_color_idx]
+    }
 
 def make_grayscale_comparison_chart(r, g, b, gray):
     labels = ['Red', 'Green', 'Blue', 'Grayscale (Y)']
@@ -275,6 +356,10 @@ def analyze():
             'comparison_chart_b64': make_grayscale_comparison_chart(r, g, b, gray_arr),
         }
 
+        # Advanced Linear Algebra computations
+        svd_data = compute_svd(gray_arr)
+        pca_data = compute_pca(img_rgb)
+
         return jsonify({
             'success': True,
             'is_grayscale': is_grayscale,
@@ -289,6 +374,10 @@ def analyze():
             'channels': channels,
             'charts': charts,
             'grayscale': grayscale_section,
+            'advanced_linear_algebra': {
+                'svd': svd_data,
+                'pca': pca_data
+            }
         })
 
     except Exception as e:

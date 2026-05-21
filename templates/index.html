@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ImageMatrix — Digital Image Analyzer</title>
+  <title>ImageMatrix: Digital Image Analyzer</title>
   <meta name="description" content="Analisis gambar berwarna vs grayscale menggunakan representasi matriks RGB dan HSV color space." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
@@ -1270,7 +1270,68 @@
     </div>
   </section>
 
-  
+  <!-- ADVANCED LINEAR ALGEBRA -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-tag">Advanced Linear Algebra</div>
+        <h2 class="section-title">PCA &amp; SVD Analysis</h2>
+        <p class="section-desc">Penerapan teori Aljabar Linear tingkat lanjut pada matriks gambar. SVD untuk kompresi matriks, dan PCA untuk ekstraksi warna dominan via nilai Eigen (Eigenvalues).</p>
+      </div>
+      <div id="advanced-la-results" style="display:none">
+        
+        <!-- SVD -->
+        <h3 style="color:#e8ecf4; font-family:'Sora', sans-serif; margin-bottom: 1rem;">Singular Value Decomposition (SVD)</h3>
+        <p style="color:#7a8399; font-size: 0.9rem; margin-bottom: 1.5rem;">SVD memecah matriks Grayscale 2D menjadi <code style="color:#ff5f6d">A = U &Sigma; V^T</code>.</p>
+        <div class="id-stats" style="margin-bottom: 2rem;">
+          <div class="id-stat">
+            <div class="k">Image Rank</div>
+            <div class="v" id="svd-rank">—</div>
+          </div>
+          <div class="id-stat">
+            <div class="k">Highest Singular Value (&sigma;&#8321;)</div>
+            <div class="v" id="svd-top-val">—</div>
+          </div>
+          <div class="id-stat">
+            <div class="k">k for 90% Variance</div>
+            <div class="v" id="svd-k90">—</div>
+          </div>
+          <div class="id-stat">
+            <div class="k">k for 95% Variance</div>
+            <div class="v" id="svd-k95">—</div>
+          </div>
+        </div>
+        <div class="chart-tile" style="max-width: 700px; margin: 0 auto 3rem auto;">
+          <div class="chart-tile-label">Scree Plot &amp; Cumulative Explained Variance</div>
+          <img id="chart-svd-scree" src="" alt="Scree Plot" />
+        </div>
+
+        <!-- PCA -->
+        <h3 style="color:#e8ecf4; font-family:'Sora', sans-serif; margin-bottom: 1rem;">Principal Component Analysis (PCA) pada RGB Space</h3>
+        <p style="color:#7a8399; font-size: 0.9rem; margin-bottom: 1.5rem;">Menganalisis sebaran warna RGB (Matriks Covariance 3x3) untuk mencari vektor warna utama via Eigenvalues &amp; Eigenvectors.</p>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;" class="split">
+          <div class="r-card">
+            <div class="r-card-head">
+               <div class="r-sec-title">Covariance Matrix (3x3)</div>
+            </div>
+            <div class="r-card-body" style="overflow-x:auto;">
+              <table class="matrix-tbl" id="pca-cov-matrix" style="width: 100%; text-align: center;"></table>
+            </div>
+          </div>
+          <div class="r-card">
+            <div class="r-card-head">
+               <div class="r-sec-title">Eigenvalues (Explained Variance)</div>
+            </div>
+            <div class="r-card-body" id="pca-eigen-info" style="font-size:0.9rem; color:#e8ecf4; line-height: 1.8;">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <footer class="footer">
     <div class="footer-inner">
       <div>
@@ -1545,6 +1606,48 @@
     document.getElementById('gray-max').textContent = d.grayscale.stats.max;
     document.getElementById('gray-mean').textContent = d.grayscale.stats.mean;
     document.getElementById('gray-std').textContent = d.grayscale.stats.std;
+
+    // Advanced LA rendering
+    document.getElementById('svd-rank').textContent = d.advanced_linear_algebra.svd.rank;
+    document.getElementById('svd-top-val').textContent = d.advanced_linear_algebra.svd.top_singular_value.toFixed(2);
+    document.getElementById('svd-k90').textContent = d.advanced_linear_algebra.svd.k_90;
+    document.getElementById('svd-k95').textContent = d.advanced_linear_algebra.svd.k_95;
+    document.getElementById('chart-svd-scree').src = 'data:image/png;base64,' + d.advanced_linear_algebra.svd.scree_plot_b64;
+
+    const covTbl = document.getElementById('pca-cov-matrix');
+    covTbl.innerHTML = '<tr><th></th><th style="color:#ff5f6d">R</th><th style="color:#4ecb8d">G</th><th style="color:#5b8dee">B</th></tr>';
+    const channels = ['R', 'G', 'B'];
+    const colors = ['#ff5f6d', '#4ecb8d', '#5b8dee'];
+    d.advanced_linear_algebra.pca.covariance_matrix.forEach((row, i) => {
+      let tr = document.createElement('tr');
+      let th = document.createElement('th');
+      th.textContent = channels[i];
+      th.style.color = colors[i];
+      tr.appendChild(th);
+      row.forEach(val => {
+        let td = document.createElement('td');
+        td.textContent = val.toFixed(1);
+        tr.appendChild(td);
+      });
+      covTbl.appendChild(tr);
+    });
+
+    const eigenInfo = document.getElementById('pca-eigen-info');
+    let eigenHtml = '';
+    const ev = d.advanced_linear_algebra.pca.eigenvalues;
+    const exp = d.advanced_linear_algebra.pca.explained_variance;
+    const evec = d.advanced_linear_algebra.pca.eigenvectors;
+    
+    for(let i=0; i<3; i++) {
+        eigenHtml += `<div><strong>&lambda;<sub>${i+1}</sub> = ${ev[i].toFixed(1)}</strong> (${exp[i].toFixed(2)}%)<br/>
+        Vector: [${evec[0][i].toFixed(3)}, ${evec[1][i].toFixed(3)}, ${evec[2][i].toFixed(3)}]</div><br/>`;
+    }
+    eigenHtml += `<div style="margin-top:1rem; padding: 1rem; background: rgba(91,141,238,0.1); border-radius: 8px;">
+    <strong>Dominant Vector: ${d.advanced_linear_algebra.pca.dominant_axis}</strong>
+    </div>`;
+    eigenInfo.innerHTML = eigenHtml;
+
+    document.getElementById('advanced-la-results').style.display = 'block';
 
     const results = document.getElementById('results');
     results.style.display = 'block';

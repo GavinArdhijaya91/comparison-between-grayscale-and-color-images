@@ -44,8 +44,9 @@ LANG = {
         "sec_stats": "📊 03 — Statistik Per Channel",
         "sec_rgb": "🎨 04 — Visualisasi Channel RGB",
         "sec_charts": "📈 05 — Grafik & Kurva Analisis",
-        "sec_matrix": "🔥 06 — Heatmap & Representasi Matriks",
-        "sec_report": "📋 07 — Laporan & Ringkasan",
+        "sec_matrix": "🧮 06 — Representasi Matriks",
+        "sec_adv": "📐 07 — Advanced Linear Algebra (PCA & SVD)",
+        "sec_report": "📝 08 — Laporan & Ringkasan",
         "btn_csv": "⬇️ Download Statistik CSV",
         "btn_txt": "⬇️ Download Laporan TXT"
     },
@@ -61,8 +62,9 @@ LANG = {
         "sec_stats": "📊 03 — Per-Channel Statistics",
         "sec_rgb": "🎨 04 — RGB Channel Visualization",
         "sec_charts": "📈 05 — Analysis Charts & Curves",
-        "sec_matrix": "🔥 06 — Heatmap & Matrix Representation",
-        "sec_report": "📋 07 — Report & Summary",
+        "sec_matrix": "🧮 06 — Matrix Representation",
+        "sec_adv": "📐 07 — Advanced Linear Algebra (PCA & SVD)",
+        "sec_report": "📝 08 — Report & Summary",
         "btn_csv": "⬇️ Download Statistics CSV",
         "btn_txt": "⬇️ Download Report TXT"
     }
@@ -442,6 +444,92 @@ if uploaded_file is not None:
                     
                 df_sub = pd.DataFrame(sub_m)
                 st.dataframe(df_sub.style.background_gradient(cmap=cmap))
+                
+            st.divider()
+            
+            # --- SECTION 8.5: ADVANCED LINEAR ALGEBRA ---
+            st.subheader(T["sec_adv"])
+            adv_tab1, adv_tab2 = st.tabs(["Singular Value Decomposition (SVD)", "Principal Component Analysis (PCA)"])
+            
+            with adv_tab1:
+                st.markdown("### Matrix Compression via SVD")
+                st.markdown("Memecah matriks gambar Grayscale menjadi $A = U \\Sigma V^T$")
+                
+                max_dim = 400
+                if max(h, w) > max_dim:
+                    scale = max_dim / max(h, w)
+                    img_svd_in = cv2.resize(img_gray, (int(w*scale), int(h*scale))).astype(float)
+                else:
+                    img_svd_in = img_gray.astype(float)
+                    
+                U, S, Vt = np.linalg.svd(img_svd_in, full_matrices=False)
+                rank = np.linalg.matrix_rank(img_svd_in)
+                
+                st.markdown(f"**Original Image Rank:** {rank}")
+                
+                k_val = st.slider("Pilih jumlah Singular Values (k) untuk merekonstruksi gambar:", min_value=1, max_value=len(S), value=int(len(S)*0.1))
+                
+                S_k = np.zeros_like(S)
+                S_k[:k_val] = S[:k_val]
+                img_reconstructed = np.dot(U, np.dot(np.diag(S_k), Vt))
+                img_reconstructed = np.clip(img_reconstructed, 0, 255).astype(np.uint8)
+                
+                col_svd1, col_svd2 = st.columns(2)
+                with col_svd1:
+                    st.image(img_svd_in.astype(np.uint8), caption="Original Grayscale", use_container_width=True)
+                with col_svd2:
+                    st.image(img_reconstructed, caption=f"Reconstructed (k={k_val})", use_container_width=True)
+                    
+                fig_scree, ax_scree = plt.subplots(figsize=(8, 3))
+                fig_scree.patch.set_facecolor('none')
+                ax_scree.set_facecolor('none')
+                
+                total_var = np.sum(S**2)
+                if total_var == 0: total_var = 1e-10
+                explained_variance = (S**2) / total_var
+                cum_variance = np.cumsum(explained_variance)
+                
+                plot_k = min(50, len(S))
+                ax_scree.plot(range(1, plot_k+1), cum_variance[:plot_k]*100, marker='o', color='#ff5f6d', markersize=4)
+                ax_scree.set_xlabel('Number of Singular Values (k)', color="white")
+                ax_scree.set_ylabel('Cumulative Explained Variance (%)', color="white")
+                ax_scree.grid(True, alpha=0.2)
+                st.pyplot(fig_scree)
+                
+            with adv_tab2:
+                st.markdown("### Color Space Covariance & Principal Axes")
+                st.markdown("Menganalisis matriks sebaran warna RGB (N x 3) untuk menemukan vektor warna paling dominan menggunakan Eigenvectors.")
+                
+                N_px = img_rgb.shape[0] * img_rgb.shape[1]
+                X_pca = img_rgb.reshape(-1, 3).astype(float)
+                if N_px > 50000:
+                    X_pca = X_pca[np.random.choice(N_px, 50000, replace=False)]
+                    
+                X_centered = X_pca - np.mean(X_pca, axis=0)
+                cov_mat = np.cov(X_centered, rowvar=False)
+                
+                eig_vals, eig_vecs = np.linalg.eigh(cov_mat)
+                idx = np.argsort(eig_vals)[::-1]
+                eig_vals = eig_vals[idx]
+                eig_vecs = eig_vecs[:, idx]
+                
+                total_eig = np.sum(eig_vals)
+                if total_eig == 0: total_eig = 1e-10
+                exp_var = (eig_vals / total_eig) * 100
+                
+                pca_col1, pca_col2 = st.columns(2)
+                with pca_col1:
+                    st.markdown("#### RGB Covariance Matrix (3x3)")
+                    df_cov = pd.DataFrame(cov_mat, columns=['R', 'G', 'B'], index=['R', 'G', 'B'])
+                    st.dataframe(df_cov.style.format("{:.2f}"))
+                with pca_col2:
+                    st.markdown("#### Eigenvalues (Explained Variance)")
+                    for i in range(3):
+                        st.markdown(f"- **&lambda;<sub>{i+1}</sub> = {eig_vals[i]:.1f}** ({exp_var[i]:.2f}%)  \n  Vector: `[{eig_vecs[0, i]:.3f}, {eig_vecs[1, i]:.3f}, {eig_vecs[2, i]:.3f}]`", unsafe_allow_html=True)
+                        
+                dom_idx = int(np.argmax(np.abs(eig_vecs[:, 0])))
+                pca_channels = ["Red", "Green", "Blue"]
+                st.info(f"**Dominant Color Axis:** {pca_channels[dom_idx]}")
                 
             st.divider()
             
