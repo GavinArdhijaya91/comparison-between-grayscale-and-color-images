@@ -783,7 +783,7 @@
         <p class="hero-desc reveal delay-2">
           <span data-i18n="hero.desc1">Upload any image and get a</span>
           <strong data-i18n="hero.desc2"> deep scientific analysis</strong>
-          <span data-i18n="hero.desc3"> — color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.</span>
+          <span data-i18n="hero.desc3"> color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.</span>
         </p>
         <div class="hero-cta reveal delay-3">
           <button class="btn-primary" onclick="scrollToUpload()">
@@ -849,7 +849,7 @@
         <div class="step-tag">UPLOAD</div>
         <img class="step-img" src="https://picsum.photos/seed/upload99/600/338" alt="Upload" loading="lazy" />
         <div class="step-title" data-i18n="step1.title">Upload Your Image</div>
-        <p class="step-desc" data-i18n="step1.desc">Drag &amp; drop or click to select. Supports PNG, JPG, BMP, and WEBP up to 16MB. Your image is processed entirely in-memory — nothing stored on disk.</p>
+        <p class="step-desc" data-i18n="step1.desc">Drag &amp; drop or click to select. Supports PNG, JPG, BMP, and WEBP up to 16MB. Your image is processed entirely in-memory nothing stored on disk.</p>
       </div>
       <div class="step-card reveal delay-1" data-step="02">
         <div class="step-tag">ANALYZE</div>
@@ -861,7 +861,7 @@
         <div class="step-tag">VISUALIZE</div>
         <img class="step-img" src="https://picsum.photos/seed/chart55/600/338" alt="Visualize" loading="lazy" />
         <div class="step-title" data-i18n="step3.title">Rich Visualizations</div>
-        <p class="step-desc" data-i18n="step3.desc">Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices — all rendered server-side with matplotlib and delivered as crisp PNG images.</p>
+        <p class="step-desc" data-i18n="step3.desc">Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices all rendered server-side with matplotlib and delivered as crisp PNG images.</p>
       </div>
     </div>
   </section>
@@ -881,7 +881,7 @@
           <em data-i18n="method.title2"> color space,</em><br>
           <span data-i18n="method.title3">not RGB delta.</span>
         </h2>
-        <p class="section-desc" data-i18n="method.desc">Most naive implementations compare RGB channel differences. We go deeper — using the <strong>Saturation channel</strong> in HSV space which directly represents <em>colorfulness</em>.</p>
+        <p class="section-desc" data-i18n="method.desc">Most naive implementations compare RGB channel differences. We go deeper using the <strong>Saturation channel</strong> in HSV space which directly represents <em>colorfulness</em>.</p>
         <ul class="split-feature-list">
           <li>
             <div class="feat-icon">🔍</div>
@@ -901,7 +901,7 @@
             <div class="feat-icon">📊</div>
             <div class="feat-text">
               <strong data-i18n="feat3.title">Server-Side Charts</strong>
-              <p data-i18n="feat3.desc">All 6 charts are rendered by matplotlib on the backend and sent as base64 PNG — no JS chart library needed.</p>
+              <p data-i18n="feat3.desc">All 6 charts are rendered by matplotlib on the backend and sent as base64 PNG no JS chart library needed.</p>
             </div>
           </li>
         </ul>
@@ -934,7 +934,7 @@
             <div class="feat-icon">🟦</div>
             <div class="feat-text">
               <strong>Y = 0.299R + 0.587G + 0.114B</strong>
-              <p data-i18n="luma.desc">Luminance as a linear combination — weights match human eye sensitivity.</p>
+              <p data-i18n="luma.desc">Luminance as a linear combination weights match human eye sensitivity.</p>
             </div>
           </li>
           <li>
@@ -974,7 +974,7 @@
       <div class="tech-card reveal delay-2">
         <div class="tech-icon">📉</div>
         <div class="tech-name">Matplotlib</div>
-        <div class="tech-desc" data-i18n="tech3">All charts rendered server-side — histograms, heatmaps, scatter plots.</div>
+        <div class="tech-desc" data-i18n="tech3">All charts rendered server-side histograms, heatmaps, scatter plots.</div>
       </div>
       <div class="tech-card reveal delay-3">
         <div class="tech-icon">🔢</div>
@@ -992,7 +992,7 @@
       <span data-i18n="upload.title1">Upload your image.</span><br>
       <em data-i18n="upload.title2">See the math.</em>
     </h2>
-    <p class="section-desc reveal delay-2" data-i18n="upload.desc">Supports PNG, JPG, BMP, WEBP — up to 16MB. Results appear instantly below.</p>
+    <p class="section-desc reveal delay-2" data-i18n="upload.desc">Supports PNG, JPG, BMP, WEBP up to 16MB. Results appear instantly below.</p>
 
     <div class="upload-wrap reveal delay-2">
       <div class="upload-header-band">
@@ -1012,7 +1012,7 @@
           <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.bmp,.webp" />
           <div class="drop-icon">🖼️</div>
           <div class="drop-title" data-i18n="drop.title">Drag &amp; Drop your image here</div>
-          <div class="drop-hint" data-i18n="drop.hint">PNG, JPG, BMP, WEBP — max 16 MB</div>
+          <div class="drop-hint" data-i18n="drop.hint">PNG, JPG, BMP, WEBP max 16 MB</div>
         </div>
         <div class="preview-wrap" id="preview-wrap">
           <img id="preview-img" src="" alt="Preview" />
@@ -1039,13 +1039,13 @@
           <span class="r-sec-title" data-i18n="sec.01">Identifikasi</span>
         </div>
         <div class="r-card-body">
-          <div id="id-badge" class="id-badge-large">—</div>
-          <div class="id-reason" id="id-reason">—</div>
+          <div id="id-badge" class="id-badge-large">-</div>
+          <div class="id-reason" id="id-reason">-</div>
           <div class="id-stats">
-            <div class="id-stat"><div class="k" data-i18n="stat.mean_sat">Mean Saturation</div><div class="v" id="v-mean-sat">—</div></div>
-            <div class="id-stat"><div class="k" data-i18n="stat.colored_ratio">Colored Pixel Ratio</div><div class="v" id="v-colored-ratio">—</div></div>
-            <div class="id-stat"><div class="k" data-i18n="stat.dimension">Dimensi</div><div class="v" id="v-dimension">—</div></div>
-            <div class="id-stat"><div class="k" data-i18n="stat.total_px">Total Piksel</div><div class="v" id="v-total-px">—</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.mean_sat">Mean Saturation</div><div class="v" id="v-mean-sat">-</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.colored_ratio">Colored Pixel Ratio</div><div class="v" id="v-colored-ratio">-</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.dimension">Dimensi</div><div class="v" id="v-dimension">-</div></div>
+            <div class="id-stat"><div class="k" data-i18n="stat.total_px">Total Piksel</div><div class="v" id="v-total-px">-</div></div>
           </div>
         </div>
       </div>
@@ -1080,10 +1080,10 @@
               <div class="ch-label"><span class="ch-dot" style="background:var(--r-color)"></span>Red Channel</div>
               <img class="ch-main-img" id="ch-r-img" src="" alt="R" />
               <div class="ch-stat-row">
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-r-min">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-r-max">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-r-mean">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-r-std">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-r-min">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-r-max">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-r-mean">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-r-std">-</span></div>
               </div>
               <img class="ch-hist" id="ch-r-hist" src="" alt="R Hist" />
             </div>
@@ -1091,10 +1091,10 @@
               <div class="ch-label"><span class="ch-dot" style="background:var(--g-color)"></span>Green Channel</div>
               <img class="ch-main-img" id="ch-g-img" src="" alt="G" />
               <div class="ch-stat-row">
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-g-min">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-g-max">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-g-mean">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-g-std">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-g-min">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-g-max">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-g-mean">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-g-std">-</span></div>
               </div>
               <img class="ch-hist" id="ch-g-hist" src="" alt="G Hist" />
             </div>
@@ -1102,10 +1102,10 @@
               <div class="ch-label"><span class="ch-dot" style="background:var(--b-color)"></span>Blue Channel</div>
               <img class="ch-main-img" id="ch-b-img" src="" alt="B" />
               <div class="ch-stat-row">
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-b-min">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-b-max">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-b-mean">—</span></div>
-                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-b-std">—</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="ch-b-min">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="ch-b-max">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="ch-b-mean">-</span></div>
+                <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std</span>: <span class="sv" id="ch-b-std">-</span></div>
               </div>
               <img class="ch-hist" id="ch-b-hist" src="" alt="B Hist" />
             </div>
@@ -1140,7 +1140,7 @@
             <button class="tab-btn" data-tab="B" onclick="switchMatrix('B',this)">B</button>
             <button class="tab-btn" data-tab="Y" onclick="switchMatrix('Y',this)">Grayscale Y</button>
           </div>
-          <div class="matrix-meta" id="matrix-info">—</div>
+          <div class="matrix-meta" id="matrix-info">-</div>
           <div class="matrix-scroll">
             <table class="matrix-tbl" id="matrix-tbl"></table>
           </div>
@@ -1185,10 +1185,10 @@
               <div class="chart-tile" style="margin-top:1.25rem;text-align:left;padding:1.25rem">
                 <div class="chart-tile-label" style="margin-bottom:1rem" data-i18n="stat.gray_stats">Statistik Y</div>
                 <div class="ch-stat-row" style="grid-template-columns:1fr 1fr;gap:0.75rem">
-                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="gray-min">—</span></div>
-                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="gray-max">—</span></div>
-                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="gray-mean">—</span></div>
-                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std Dev</span>: <span class="sv" id="gray-std">—</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.min">Min</span>: <span class="sv" id="gray-min">-</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.max">Max</span>: <span class="sv" id="gray-max">-</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.mean">Mean</span>: <span class="sv" id="gray-mean">-</span></div>
+                  <div class="ch-stat-cell"><span class="sk" data-i18n="stat.std">Std Dev</span>: <span class="sv" id="gray-std">-</span></div>
                 </div>
               </div>
             </div>
@@ -1213,19 +1213,19 @@
         <div class="id-stats" style="margin-bottom: 2rem;">
           <div class="id-stat">
             <div class="k">Image Rank</div>
-            <div class="v" id="svd-rank">—</div>
+            <div class="v" id="svd-rank">-</div>
           </div>
           <div class="id-stat">
             <div class="k">Highest Singular Value (&sigma;&#8321;)</div>
-            <div class="v" id="svd-top-val">—</div>
+            <div class="v" id="svd-top-val">-</div>
           </div>
           <div class="id-stat">
             <div class="k">k for 90% Variance</div>
-            <div class="v" id="svd-k90">—</div>
+            <div class="v" id="svd-k90">-</div>
           </div>
           <div class="id-stat">
             <div class="k">k for 95% Variance</div>
-            <div class="v" id="svd-k95">—</div>
+            <div class="v" id="svd-k95">-</div>
           </div>
         </div>
         <div class="chart-tile" style="max-width: 700px; margin: 0 auto 3rem auto;">
@@ -1288,7 +1288,7 @@
       "hero.title4":"dengan matriks.",
       "hero.desc1":"Upload gambar apapun dan dapatkan",
       "hero.desc2":" analisis ilmiah yang mendalam",
-      "hero.desc3":" — klasifikasi warna, breakdown channel RGB, heatmap saturasi HSV, visualisasi matriks piksel, dan banyak lagi.",
+      "hero.desc3":" klasifikasi warna, breakdown channel RGB, heatmap saturasi HSV, visualisasi matriks piksel, dan banyak lagi.",
       "hero.cta":"Mulai Analisis","hero.how":"Cara Kerja","hero.scroll":"scroll untuk menjelajahi",
       "hero.badge1":"Teranalisis HSV","hero.chip":"BERWARNA ✓",
       "stat.sections":"Bagian Analisis","stat.charts":"Chart Matplotlib",
@@ -1297,26 +1297,26 @@
       "how.desc":"Tanpa model ML black-box. Setiap keputusan berbasis aljabar linear dan matematika ruang warna.",
       "step1.title":"Upload Gambar","step1.desc":"Drag &amp; drop atau klik untuk memilih. Mendukung PNG, JPG, BMP, dan WEBP hingga 16MB.",
       "step2.title":"Analisis HSV","step2.desc":"Gambar dikonversi ke ruang warna HSV. Kami mengukur mean saturasi dan colored pixel ratio di seluruh matriks channel saturasi.",
-      "step3.title":"Visualisasi Kaya","step3.desc":"Dapatkan histogram, bar chart, heatmap, scatter plot, dan matriks piksel — semua dirender server-side oleh matplotlib.",
+      "step3.title":"Visualisasi Kaya","step3.desc":"Dapatkan histogram, bar chart, heatmap, scatter plot, dan matriks piksel semua dirender server-side oleh matplotlib.",
       "method.tag":"Metode Identifikasi","method.title1":"HSV","method.title2":" color space,","method.title3":"bukan delta RGB.",
-      "method.desc":"Kebanyakan implementasi naif membandingkan selisih channel RGB. Kami lebih dalam — menggunakan channel Saturasi di ruang HSV yang langsung merepresentasikan <em>warna</em>.",
+      "method.desc":"Kebanyakan implementasi naif membandingkan selisih channel RGB. Kami lebih dalam menggunakan channel Saturasi di ruang HSV yang langsung merepresentasikan <em>warna</em>.",
       "feat1.title":"Cek Mode Pillow","feat1.desc":"Gambar dengan mode L, LA, atau P langsung diklasifikasikan sebagai grayscale sebelum komputasi.",
       "feat2.title":"Matriks Saturasi","feat2.desc":"mean_saturation < 8 atau colored_pixel_ratio < 1% → GRAYSCALE.",
       "feat3.title":"Chart Server-Side","feat3.desc":"Semua 6 chart dirender oleh matplotlib di backend dan dikirim sebagai base64 PNG.",
       "matrix.tag":"Inti Aljabar Linear","matrix.title1":"Setiap piksel","matrix.title2":" adalah vektor.","matrix.title3":"Setiap gambar adalah","matrix.title4":" tensor.",
       "matrix.desc":"Gambar berwarna adalah tensor 3D berukuran H × W × 3. Grayscale runtuh menjadi H × W × 1. Kami mengekspos nilai numerik mentah sebagai heatmap interaktif.",
       "px.desc":"Setiap piksel adalah vektor-3 dalam ruang warna ℝ³.",
-      "luma.desc":"Luminansi sebagai kombinasi linear — bobot sesuai sensitivitas mata manusia.",
+      "luma.desc":"Luminansi sebagai kombinasi linear bobot sesuai sensitivitas mata manusia.",
       "stats.desc":"Deskriptor statistik dihitung per-channel pada seluruh matriks.",
       "tech.tag":"Stack Teknologi","tech.title":"Dibangun dengan alat presisi.",
       "tech1":"Python micro-framework untuk backend API dan rendering template.",
       "tech2":"Konversi HSV, pemisahan channel, dan pipeline dekoding gambar.",
-      "tech3":"Semua chart dirender server-side — histogram, heatmap, scatter plot.",
+      "tech3":"Semua chart dirender server-side histogram, heatmap, scatter plot.",
       "tech4":"Operasi matriks, komputasi statistik, dan manipulasi array piksel.",
       "upload.tag":"Coba Sekarang","upload.title1":"Upload gambarmu.","upload.title2":"Lihat matematikanya.",
-      "upload.desc":"Mendukung PNG, JPG, BMP, WEBP — hingga 16MB. Hasil muncul langsung di bawah.",
+      "upload.desc":"Mendukung PNG, JPG, BMP, WEBP hingga 16MB. Hasil muncul langsung di bawah.",
       "upload.card.title":"Image Analyzer","upload.card.sub":"Diperkuat oleh OpenCV + NumPy + Matplotlib",
-      "drop.title":"Drag &amp; Drop gambar ke sini","drop.hint":"PNG, JPG, BMP, WEBP — maks 16 MB",
+      "drop.title":"Drag &amp; Drop gambar ke sini","drop.hint":"PNG, JPG, BMP, WEBP maks 16 MB",
       "btn.analyze":"Analisis Gambar","btn.reset":"Reset",
       "loading.text":"Menganalisis gambar, membuat chart...",
       "sec.01":"Identifikasi","sec.02":"Perbandingan Gambar","sec.03":"Visualisasi Channel RGB",
@@ -1331,9 +1331,9 @@
       "chart.hist_rgb":"Histogram RGB","chart.bar_stats":"Bar Chart Statistik",
       "chart.heatmap":"Heatmap Saturasi HSV","chart.scatter":"Scatter R vs G",
       "chart.gray_compare":"Perbandingan Mean Channel",
-      "reason.color":"Gambar diklasifikasikan BERWARNA — mean saturasi HSV ≥ 8 dan colored pixel ratio ≥ 1%.",
-      "reason.gray":"Gambar diklasifikasikan GRAYSCALE — mean saturasi HSV sangat rendah atau hampir tidak ada piksel berwarna.",
-      "reason.direct":"Gambar diklasifikasikan GRAYSCALE — mode file asli:",
+      "reason.color":"Gambar diklasifikasikan BERWARNA mean saturasi HSV ≥ 8 dan colored pixel ratio ≥ 1%.",
+      "reason.gray":"Gambar diklasifikasikan GRAYSCALE mean saturasi HSV sangat rendah atau hampir tidak ada piksel berwarna.",
+      "reason.direct":"Gambar diklasifikasikan GRAYSCALE mode file asli:",
       "matrix.info":"Menampilkan subset %R×%C dari gambar %W×%H piksel penuh.",
       "footer.note":"Tugas Aljabar Linear · Analisis Citra Digital"
     },
@@ -1341,7 +1341,7 @@
       "hero.eyebrow":"Linear Algebra · HSV Color Space · Matrix Analysis",
       "hero.title1":"Analyze","hero.title2":" &amp; identify","hero.title3":"digital images","hero.title4":"with matrices.",
       "hero.desc1":"Upload any image and get a","hero.desc2":" deep scientific analysis",
-      "hero.desc3":" — color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.",
+      "hero.desc3":" color classification, RGB channel breakdown, HSV saturation heatmap, pixel matrix visualization, and more.",
       "hero.cta":"Start Analysis","hero.how":"How It Works","hero.scroll":"scroll to explore",
       "hero.badge1":"HSV Analyzed","hero.chip":"COLOR ✓",
       "stat.sections":"Analysis Sections","stat.charts":"Matplotlib Charts",
@@ -1350,26 +1350,26 @@
       "how.desc":"No black-box ML models. Every decision is based on linear algebra and color space mathematics.",
       "step1.title":"Upload Your Image","step1.desc":"Drag & drop or click to select. Supports PNG, JPG, BMP, and WEBP up to 16MB.",
       "step2.title":"HSV Color Analysis","step2.desc":"Image is converted to HSV color space. We measure the mean saturation and colored pixel ratio across the full saturation channel matrix.",
-      "step3.title":"Rich Visualizations","step3.desc":"Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices — all rendered server-side with matplotlib.",
+      "step3.title":"Rich Visualizations","step3.desc":"Get histograms, bar charts, heatmaps, scatter plots, and pixel matrices all rendered server-side with matplotlib.",
       "method.tag":"Identification Method","method.title1":"HSV","method.title2":" color space,","method.title3":"not RGB delta.",
-      "method.desc":"Most naive implementations compare RGB channel differences. We go deeper — using the Saturation channel in HSV space which directly represents colorfulness.",
+      "method.desc":"Most naive implementations compare RGB channel differences. We go deeper using the Saturation channel in HSV space which directly represents colorfulness.",
       "feat1.title":"Pillow Mode Check","feat1.desc":"Images with mode L, LA, or P are instantly classified as grayscale before any computation.",
       "feat2.title":"Saturation Matrix","feat2.desc":"mean_saturation < 8 or colored_pixel_ratio < 1% → GRAYSCALE.",
       "feat3.title":"Server-Side Charts","feat3.desc":"All 6 charts are rendered by matplotlib on the backend and sent as base64 PNG.",
       "matrix.tag":"Linear Algebra Core","matrix.title1":"Every pixel","matrix.title2":" is a vector.","matrix.title3":"Every image is","matrix.title4":" a tensor.",
       "matrix.desc":"A color image is a 3D tensor of shape H × W × 3. Grayscale collapses to H × W × 1. We expose raw numerical values as an interactive heatmap.",
       "px.desc":"Each pixel is a 3-vector in ℝ³ color space.",
-      "luma.desc":"Luminance as a linear combination — weights match human eye sensitivity.",
+      "luma.desc":"Luminance as a linear combination weights match human eye sensitivity.",
       "stats.desc":"Statistical descriptors computed per-channel across the full matrix.",
       "tech.tag":"Tech Stack","tech.title":"Built with precision tools.",
       "tech1":"Python micro-framework for the backend API and template rendering.",
       "tech2":"HSV conversion, channel splitting, and image decoding pipeline.",
-      "tech3":"All charts rendered server-side — histograms, heatmaps, scatter plots.",
+      "tech3":"All charts rendered server-side histograms, heatmaps, scatter plots.",
       "tech4":"Matrix operations, statistical computation, and pixel array manipulation.",
       "upload.tag":"Try It Now","upload.title1":"Upload your image.","upload.title2":"See the math.",
-      "upload.desc":"Supports PNG, JPG, BMP, WEBP — up to 16MB. Results appear instantly below.",
+      "upload.desc":"Supports PNG, JPG, BMP, WEBP up to 16MB. Results appear instantly below.",
       "upload.card.title":"Image Analyzer","upload.card.sub":"Powered by OpenCV + NumPy + Matplotlib",
-      "drop.title":"Drag & Drop your image here","drop.hint":"PNG, JPG, BMP, WEBP — max 16 MB",
+      "drop.title":"Drag & Drop your image here","drop.hint":"PNG, JPG, BMP, WEBP max 16 MB",
       "btn.analyze":"Analyze Image","btn.reset":"Reset",
       "loading.text":"Analyzing image, generating charts...",
       "sec.01":"Identification","sec.02":"Image Comparison","sec.03":"RGB Channel Visualization",
@@ -1384,9 +1384,9 @@
       "chart.hist_rgb":"RGB Histogram","chart.bar_stats":"Channel Stats Bar Chart",
       "chart.heatmap":"Saturation Heatmap (HSV-S)","chart.scatter":"Scatter R vs G",
       "chart.gray_compare":"Channel Mean Comparison",
-      "reason.color":"Image classified as COLOR — HSV mean saturation ≥ 8 and colored pixel ratio ≥ 1%.",
-      "reason.gray":"Image classified as GRAYSCALE — HSV mean saturation is very low or barely any colored pixels.",
-      "reason.direct":"Image classified as GRAYSCALE — original file mode:",
+      "reason.color":"Image classified as COLOR HSV mean saturation ≥ 8 and colored pixel ratio ≥ 1%.",
+      "reason.gray":"Image classified as GRAYSCALE HSV mean saturation is very low or barely any colored pixels.",
+      "reason.direct":"Image classified as GRAYSCALE original file mode:",
       "matrix.info":"Showing %R×%C subset of full %W×%H pixel image.",
       "footer.note":"Linear Algebra Assignment · Digital Image Analysis"
     }

@@ -8,7 +8,7 @@ from scipy.stats import skew, kurtosis
 import io
 
 st.set_page_config(
-    page_title="Digital Image Analysis — Linear Algebra",
+    page_title="Digital Image Analysis Linear Algebra",
     layout="wide",
     page_icon="🔬"
 )
@@ -29,38 +29,38 @@ def process_image(image_bytes, max_dim=800):
 
 LANG = {
     "ID": {
-        "title": "Analisis Citra Digital — Aljabar Linear",
+        "title": "Analisis Citra Digital Aljabar Linear",
         "subtitle": "Representasi Gambar sebagai Matriks & Analisis Ruang Warna",
         "theory_title": "📖 Teori Aljabar Linear pada Citra Digital",
         "upload_title": "Unggah Gambar untuk Dianalisis",
         "analyze_btn": "🔍 Mulai Analisis",
         "upload_wait": "Silakan unggah gambar terlebih dahulu.",
-        "sec_ident": "🏷️ 01 — Hasil Identifikasi",
-        "sec_compare": "🖼️ 02 — Perbandingan Gambar",
-        "sec_stats": "📊 03 — Statistik Per Channel",
-        "sec_rgb": "🎨 04 — Visualisasi Channel RGB",
-        "sec_charts": "📈 05 — Grafik & Kurva Analisis",
-        "sec_matrix": "🧮 06 — Representasi Matriks",
-        "sec_adv": "📐 07 — Advanced Linear Algebra (PCA & SVD)",
-        "sec_report": "📝 08 — Laporan & Ringkasan",
+        "sec_ident": "🏷️ 01 Hasil Identifikasi",
+        "sec_compare": "🖼️ 02 Perbandingan Gambar",
+        "sec_stats": "📊 03 Statistik Per Channel",
+        "sec_rgb": "🎨 04 Visualisasi Channel RGB",
+        "sec_charts": "📈 05 Grafik & Kurva Analisis",
+        "sec_matrix": "🧮 06 Representasi Matriks",
+        "sec_adv": "📐 07 Advanced Linear Algebra (PCA & SVD)",
+        "sec_report": "📝 08 Laporan & Ringkasan",
         "btn_csv": "⬇️ Download Statistik CSV",
         "btn_txt": "⬇️ Download Laporan TXT"
     },
     "EN": {
-        "title": "Digital Image Analysis — Linear Algebra",
+        "title": "Digital Image Analysis Linear Algebra",
         "subtitle": "Image Representation as Matrices & Color Space Analysis",
         "theory_title": "📖 Linear Algebra Theory in Digital Images",
         "upload_title": "Upload Image to Analyze",
         "analyze_btn": "🔍 Analyze Image",
         "upload_wait": "Please upload an image first.",
-        "sec_ident": "🏷️ 01 — Identification Results",
-        "sec_compare": "🖼️ 02 — Image Comparison",
-        "sec_stats": "📊 03 — Per-Channel Statistics",
-        "sec_rgb": "🎨 04 — RGB Channel Visualization",
-        "sec_charts": "📈 05 — Analysis Charts & Curves",
-        "sec_matrix": "🧮 06 — Matrix Representation",
-        "sec_adv": "📐 07 — Advanced Linear Algebra (PCA & SVD)",
-        "sec_report": "📝 08 — Report & Summary",
+        "sec_ident": "🏷️ 01 Identification Results",
+        "sec_compare": "🖼️ 02 Image Comparison",
+        "sec_stats": "📊 03 Per-Channel Statistics",
+        "sec_rgb": "🎨 04 RGB Channel Visualization",
+        "sec_charts": "📈 05 Analysis Charts & Curves",
+        "sec_matrix": "🧮 06 Matrix Representation",
+        "sec_adv": "📐 07 Advanced Linear Algebra (PCA & SVD)",
+        "sec_report": "📝 08 Report & Summary",
         "btn_csv": "⬇️ Download Statistics CSV",
         "btn_txt": "⬇️ Download Report TXT"
     }
@@ -379,7 +379,7 @@ if uploaded_file is not None:
                 fig_s.patch.set_facecolor('none')
                 cax = ax_s.imshow(img_hsv[:,:,1], cmap='YlOrRd')
                 fig_s.colorbar(cax, label="Saturation (0-255)")
-                ax_s.set_title("Saturation Heatmap — Semakin merah = semakin berwarna", color="white")
+                ax_s.set_title("Saturation Heatmap Semakin merah = semakin berwarna", color="white")
                 st.pyplot(fig_s)
 
             with mtab2:
